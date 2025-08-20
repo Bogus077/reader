@@ -15,5 +15,5 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-EXPOSE 8080
+EXPOSE 3010
 CMD ["node", "dist/app.js"]

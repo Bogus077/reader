@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-reading_app}
       POSTGRES_USER: ${DB_USER:-reading_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
-    ports: ["5432:5432"]
+    ports: ["5433:5433"]
     volumes: [pgdata:/var/lib/postgresql/data]
 
   api:
@@ -15,9 +15,9 @@ services:
       context: ..
       dockerfile: ./Dockerfile
     environment:
-      PORT: ${PORT:-8080}
+      PORT: ${PORT:-3010}
       DB_HOST: postgres
-      DB_PORT: ${DB_PORT:-5432}
+      DB_PORT: ${DB_PORT:-5433}
       DB_NAME: ${DB_NAME:-reading_app}
       DB_USER: ${DB_USER:-reading_user}
       DB_PASSWORD: ${DB_PASSWORD:-change_me}
@@ -26,7 +26,7 @@ services:
       JWT_TTL_DAYS: ${JWT_TTL_DAYS:-7}
       DEFAULT_TZ: ${DEFAULT_TZ:-Europe/Samara}
     depends_on: [postgres]
-    ports: ["${PORT:-8080}:${PORT:-8080}"]
+    ports: ["${PORT:-3010}:${PORT:-3010}"]
 
 volumes:
   pgdata:
