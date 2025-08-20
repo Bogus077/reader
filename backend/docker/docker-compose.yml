@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME:-reading_app}
+      POSTGRES_USER: ${DB_USER:-reading_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  api:
+    build:
+      context: ..
+      dockerfile: ./Dockerfile
+    environment:
+      PORT: ${PORT:-8080}
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-reading_app}
+      DB_USER: ${DB_USER:-reading_user}
+      DB_PASSWORD: ${DB_PASSWORD:-change_me}
+      BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-replace_me}
+      JWT_SECRET: ${JWT_SECRET:-replace_me}
+      JWT_TTL_DAYS: ${JWT_TTL_DAYS:-7}
+      DEFAULT_TZ: ${DEFAULT_TZ:-Europe/Samara}
+    depends_on: [postgres]
+    ports: ["${PORT:-8080}:${PORT:-8080}"]
+
+volumes:
+  pgdata:
