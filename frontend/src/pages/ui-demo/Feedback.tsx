@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button, Card, Modal, GradeModal, AssignmentEditModal } from "../../ui";
 import { toast as toastManager } from "../../ui/feedback/Toast/toastManager";
+import { AssignmentData } from "../../ui/composite/AssignmentEditModal/AssignmentEditModal";
 
 export default function UIFeedback() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,13 +36,13 @@ export default function UIFeedback() {
     }
   };
 
-  const handleGradeSubmit = (data: any) => {
+  const handleGradeSubmit = (data: { rating: number; comment: string }) => {
     toastManager.success("Оценка успешно сохранена!");
     closeGradeModal();
     console.log("Grade submitted:", data);
   };
 
-  const handleAssignmentSubmit = (data: any) => {
+  const handleAssignmentSubmit = (data: AssignmentData) => {
     toastManager.success("Задание успешно сохранено!");
     closeAssignmentModal();
     console.log("Assignment submitted:", data);

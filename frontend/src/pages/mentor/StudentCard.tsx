@@ -21,6 +21,7 @@ import { ru } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, Calendar, BookOpen, CalendarRange, BookPlus, CalendarPlus } from 'lucide-react';
 import styles from './StudentCard.module.scss';
 import { gradeAssignment, patchAssignment, assignStudentBook, generateAssignments, getBooksAvailable } from '../../api/client';
+import { Assignment, Strip } from '../../api/types';
 
 export const MentorStudentCard: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +48,7 @@ export const MentorStudentCard: FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignBookModalOpen, setIsAssignBookModalOpen] = useState(false);
   const [isGeneratePlanModalOpen, setIsGeneratePlanModalOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [availableBooks, setAvailableBooks] = useState<Array<{ id: number; title: string; author: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,34 +100,36 @@ export const MentorStudentCard: FC = () => {
   const getAssignmentStatus = (status: string) => {
     switch (status) {
       case 'submitted':
-        return { icon: <CheckCircle size={18} color="#4caf50" />, text: 'Выполнено', tone: 'success' };
+        return { icon: <CheckCircle size={18} color="#4caf50" />, text: 'Выполнено', tone: 'success' as const };
       case 'graded':
-        return { icon: <CheckCircle size={18} color="#4caf50" />, text: 'Оценено', tone: 'success' };
+        return { icon: <CheckCircle size={18} color="#4caf50" />, text: 'Оценено', tone: 'success' as const };
       case 'missed':
-        return { icon: <XCircle size={18} color="#f44336" />, text: 'Пропущено', tone: 'danger' };
+        return { icon: <XCircle size={18} color="#f44336" />, text: 'Пропущено', tone: 'danger' as const };
       case 'pending':
-        return { icon: <Clock size={18} color="#2196f3" />, text: 'Ожидается', tone: 'info' };
+        return { icon: <Clock size={18} color="#2196f3" />, text: 'Ожидается', tone: 'info' as const };
       default:
-        return { icon: <Clock size={18} color="#9e9e9e" />, text: 'Неизвестно', tone: 'default' };
+        return { icon: <Clock size={18} color="#9e9e9e" />, text: 'Неизвестно', tone: 'default' as const };
     }
   };
 
   // Проверка, можно ли редактировать задание
-  const canEditAssignment = (assignment: any) => {
+  const canEditAssignment = (assignment: Assignment | null) => {
     if (!assignment) return false;
-    return ['pending', 'submitted'].includes(assignment.status) && new Date(assignment.deadline) > new Date();
+    // Проверяем, что статус задания только pending или submitted
+    const deadline = `${assignment.date}T${assignment.deadline_time}`;
+    return ['pending', 'submitted'].includes(assignment.status) && new Date(deadline) > new Date();
   };
 
   // Проверка, можно ли оценить задание
-  const canGradeAssignment = (assignment: any) => {
+  const canGradeAssignment = (assignment: Assignment | null) => {
     if (!assignment) return false;
     return assignment.status === 'submitted' && !assignment.mentor_rating;
   };
   
   // Получение задания для выбранного дня или сегодняшнего дня
-  const getAssignmentForSelectedDay = () => {
+  const getAssignmentForSelectedDay = (): Assignment | null => {
     if (selectedDay) {
-      const assignment = strips.find((strip: any) => strip.date === selectedDay)?.assignment;
+      const assignment = strips.find((strip: Strip) => strip.date === selectedDay)?.assignment;
       return assignment || null;
     }
     return todayAssignment;
@@ -171,7 +174,7 @@ export const MentorStudentCard: FC = () => {
         const payload = {
           student_id: Number(id),
           book_id: data.bookId,
-          mode: data.mode,
+          progress_mode: data.mode, // исправлено с mode на progress_mode
           daily_target: data.dailyTarget,
           deadline_time: data.deadlineTime,
           start_date: data.startDate
@@ -200,10 +203,10 @@ export const MentorStudentCard: FC = () => {
         const payload = {
           student_book_id: data.studentBookId,
           mode: data.mode,
-          daily_target: data.dailyTarget,
+          dailyTarget: data.dailyTarget, // исправлено с daily_target на dailyTarget
           deadline_time: data.deadlineTime,
-          start_date: data.startDate,
-          end_date: data.endDate
+          startDate: data.startDate, // исправлено с start_date на startDate
+          endDate: data.endDate // исправлено с end_date на endDate
         };
         
         const response = await generateAssignments(payload);
@@ -225,15 +228,39 @@ export const MentorStudentCard: FC = () => {
   const handleGradeSubmit = async (data: { rating: number; comment: string }) => {
     if (selectedAssignment && id) {
       try {
-        await gradeAssignment(selectedAssignment.id, {
+        setIsLoading(true);
+        // Отправляем оценку на сервер
+        const response = await gradeAssignment(selectedAssignment.id, {
           mentor_rating: data.rating,
           mentor_comment: data.comment
         });
-        setToastMessage('Оценка успешно сохранена');
-        load(Number(id)); // Перезагрузка данных
+        
+        if (response.ok) {
+          // Закрываем модальное окно
+          setIsGradeModalOpen(false);
+          
+          // Показываем уведомление об успехе
+          setToastMessage('Оценка успешно сохранена');
+          
+          // Обновляем данные карточки без перезагрузки страницы
+          await load(Number(id));
+          
+          // Обновляем выбранное задание, если оно ещё выбрано
+          if (selectedDay) {
+            // Обновляем выбранное задание из обновленных данных
+            const updatedAssignment = strips.find((strip: Strip) => strip.date === selectedDay)?.assignment;
+            if (updatedAssignment) {
+              setSelectedAssignment(updatedAssignment);
+            }
+          }
+        } else {
+          setToastMessage('Ошибка при сохранении оценки');
+        }
       } catch (error) {
         setToastMessage('Ошибка при сохранении оценки');
         console.error('Error grading assignment:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -241,12 +268,19 @@ export const MentorStudentCard: FC = () => {
   // Обработчик сохранения отредактированного задания
   const handleEditSubmit = async (data: AssignmentData) => {
     if (selectedAssignment && id) {
+      // Проверяем, что статус задания позволяет редактирование
+      if (!['pending', 'submitted'].includes(selectedAssignment.status)) {
+        setToastMessage('Нельзя редактировать задание с текущим статусом');
+        return;
+      }
+      
       try {
         const payload = {
-          title: data.title,
-          target_pages: data.pages,
-          description: data.description,
-          time: data.time
+          deadline_time: data.time,                 // 'HH:mm'
+          target_page: data.pages ?? null,          // если меняем страницы
+          // target_percent: data.percent ?? null,  // если меняем проценты (оставь закомментировано, если UI ещё не даёт)
+          target_chapter: data.chapter ? String(data.chapter) : null, // преобразуем в string, т.к. API ожидает string
+          target_last_paragraph: data.lastParagraph ?? null,
         };
         
         await patchAssignment(selectedAssignment.id, payload);
@@ -287,10 +321,10 @@ export const MentorStudentCard: FC = () => {
               <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>Прогресс чтения</h3>
                 <DayStrips 
-                  items={strips.map((strip: any) => ({
+                  items={strips.map((strip: Strip) => ({
                     date: strip.date,
                     status: strip.status,
-                    rating: strip.rating
+                    rating: strip.rating !== null ? strip.rating : undefined
                   }))}
                   onSelect={(idx) => setSelectedDay(strips[idx]?.date || null)}
                   className={styles.dayStrips}
@@ -320,7 +354,7 @@ export const MentorStudentCard: FC = () => {
                     <div className={styles.infoRow}>
                       <div className={styles.label}>Статус:</div>
                       <div className={styles.value}>
-                        <Badge tone={getAssignmentStatus(todayAssignment.status).tone as any}>
+                        <Badge tone={getAssignmentStatus(todayAssignment.status).tone}>
                           {getAssignmentStatus(todayAssignment.status).text}
                         </Badge>
                       </div>
@@ -434,8 +468,8 @@ export const MentorStudentCard: FC = () => {
         <GradeModal
           isOpen={isGradeModalOpen}
           onClose={() => setIsGradeModalOpen(false)}
-          date={selectedAssignment.date || selectedAssignment.deadline}
-          targetSummary={`${selectedAssignment.title || 'Задание'} - ${selectedAssignment.target_pages ? `${selectedAssignment.target_pages} стр.` : ''}`}
+          date={selectedAssignment.date}
+          targetSummary={`${selectedAssignment.title || 'Задание'} - ${selectedAssignment.target?.page ? `${selectedAssignment.target.page} стр.` : ''}`}
           onSubmit={handleGradeSubmit}
           initialRating={selectedAssignment.mentor_rating || 0}
           initialComment={selectedAssignment.mentor_comment || ''}
@@ -449,13 +483,18 @@ export const MentorStudentCard: FC = () => {
           onClose={() => setIsEditModalOpen(false)}
           initialData={{
             title: selectedAssignment.title || '',
-            pages: selectedAssignment.target_pages || 0,
-            time: selectedAssignment.time || '12:00',
-            description: selectedAssignment.description || ''
+            pages: selectedAssignment.target?.page || 0,
+            time: selectedAssignment.deadline_time || '12:00',
+            description: selectedAssignment.description || '',
+            chapter: selectedAssignment.target?.chapter ? Number(selectedAssignment.target.chapter) : null,
+            lastParagraph: selectedAssignment.target?.last_paragraph || ''
           }}
           onSubmit={handleEditSubmit}
           isGraded={selectedAssignment.status === 'graded'}
-          isDeadlinePassed={new Date(selectedAssignment.deadline) < new Date()}
+          isDeadlinePassed={new Date(`${selectedAssignment.date}T${selectedAssignment.deadline_time}`) < new Date()}
+          disabled={!['pending', 'submitted'].includes(selectedAssignment.status)}
+          disabledReason={!['pending', 'submitted'].includes(selectedAssignment.status) ? 
+            'Нельзя редактировать задание со статусом "Оценено" или "Пропущено"' : ''}
         />
       )}
       

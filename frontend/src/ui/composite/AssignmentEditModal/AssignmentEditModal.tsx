@@ -12,6 +12,9 @@ export type AssignmentData = {
   pages: number;
   time: string;
   description: string;
+  chapter?: number | null;
+  lastParagraph?: string | null;
+  percent?: number | null;
 };
 
 export type AssignmentEditModalProps = {
@@ -39,6 +42,14 @@ export type AssignmentEditModalProps = {
    * Флаг, указывающий, что дедлайн задания прошел
    */
   isDeadlinePassed?: boolean;
+  /**
+   * Флаг, указывающий, что форма заблокирована по другим причинам
+   */
+  disabled?: boolean;
+  /**
+   * Причина блокировки формы
+   */
+  disabledReason?: string;
 };
 
 export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
@@ -48,6 +59,8 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   onSubmit,
   isGraded = false,
   isDeadlinePassed = false,
+  disabled = false,
+  disabledReason = '',
 }) => {
   // Состояние для хранения данных формы
   const [formData, setFormData] = useState<AssignmentData>({
@@ -55,20 +68,23 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
     pages: initialData.pages || 0,
     time: initialData.time || "12:00",
     description: initialData.description || "",
+    chapter: initialData.chapter || null,
+    lastParagraph: initialData.lastParagraph || null,
+    percent: initialData.percent || null,
   });
 
   // Состояние для хранения ошибок валидации
   const [errors, setErrors] = useState<Partial<Record<keyof AssignmentData, string>>>({});
 
   // Определяем, должна ли форма быть заблокирована
-  const isDisabled = isGraded || isDeadlinePassed;
+  const isDisabled = isGraded || isDeadlinePassed || disabled;
 
   // Сообщение о причине блокировки формы
-  const disabledMessage = isGraded 
+  const disabledMessage = disabledReason || (isGraded 
     ? "Задание уже оценено и не может быть изменено" 
     : isDeadlinePassed 
       ? "Дедлайн задания прошел, изменение невозможно" 
-      : "";
+      : "");
 
   // Обновляем данные формы при изменении initialData
   useEffect(() => {
@@ -78,6 +94,9 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
         pages: initialData.pages || 0,
         time: initialData.time || "12:00",
         description: initialData.description || "",
+        chapter: initialData.chapter || null,
+        lastParagraph: initialData.lastParagraph || null,
+        percent: initialData.percent || null,
       });
     }
   }, [initialData]);

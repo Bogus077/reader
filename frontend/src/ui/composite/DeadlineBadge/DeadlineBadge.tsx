@@ -1,6 +1,11 @@
 import { FC, useMemo } from "react";
-import { Badge } from "../../feedback";
+import { Badge, BadgeTone } from "../../feedback";
 import { formatTime } from "../../../lib";
+import { resolveVisualStatus, mapStatusToColor } from "../../../lib/visualStatus";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import tzPlugin from 'dayjs/plugin/timezone';
+dayjs.extend(utc); dayjs.extend(tzPlugin);
 
 export type DeadlineStatus = "pending" | "submitted" | "graded" | "missed";
 
@@ -35,38 +40,58 @@ export const DeadlineBadge: FC<DeadlineBadgeProps> = ({
   className,
 }) => {
   // Определяем визуальный статус и текст бейджа
-  const { visualStatus, badgeText } = useMemo(() => {
-    // Создаем объект даты дедлайна с учетом часового пояса
-    const deadlineDate = new Date(`${date}T${time}:00${tz}`);
-    const now = new Date();
-
-    // Если статус уже graded, то всегда показываем "Сдано" с зеленым бейджем
+  const { badgeColor, badgeText } = useMemo(() => {
+    // Используем ту же логику, что и в resolveVisualStatus
+    const deadline = dayjs.tz(`${date} ${time}`, tz);
+    const now = dayjs().tz(tz);
+    const isDeadlinePassed = now.isAfter(deadline);
+    
+    // Определяем визуальный статус
+    let visualStatus: "pending" | "submitted" | "missed" | "graded";
+    
     if (status === "graded") {
-      return { visualStatus: "success" as const, badgeText: "Сдано" };
+      visualStatus = "graded";
+    } else if (status === "submitted") {
+      visualStatus = "submitted";
+    } else if (status === "missed" || (isDeadlinePassed && status === "pending")) {
+      visualStatus = "missed";
+    } else {
+      visualStatus = "pending";
     }
-
-    // Если статус submitted, то показываем "Сдано" с синим бейджем
-    if (status === "submitted") {
-      return { visualStatus: "primary" as const, badgeText: "Сдано" };
-    }
-
-    // Проверяем, просрочен ли дедлайн
-    const isDeadlinePassed = now > deadlineDate;
-
-    // Если сегодня и время прошло, или статус уже missed, то показываем "Просрочено"
-    if (status === "missed" || (isDeadlinePassed && status === "pending")) {
-      return { visualStatus: "danger" as const, badgeText: "Просрочено" };
-    }
-
-    // В остальных случаях показываем "Сдать до [время]"
-    return {
-      visualStatus: "warning" as const,
-      badgeText: `Сдать до ${formatTime(time)}`,
+    
+    // Получаем цвет из функции mapStatusToColor
+    const color = mapStatusToColor(visualStatus);
+    
+    // Маппинг цветов для Badge
+    const colorToneMap: Record<string, BadgeTone> = {
+      green: "success",  // graded
+      blue: "primary",   // submitted
+      red: "danger",     // missed
+      grey: "muted"      // pending
     };
+    
+    // Определяем текст бейджа
+    let badgeText: string;
+    
+    switch (visualStatus) {
+      case "graded":
+        badgeText = "Сдано";
+        break;
+      case "submitted":
+        badgeText = "Сдано";
+        break;
+      case "missed":
+        badgeText = "Просрочено";
+        break;
+      default: // pending
+        badgeText = `Сдать до ${formatTime(time)}`;
+    }
+    
+    return { badgeColor: colorToneMap[color] || "muted", badgeText };
   }, [date, time, tz, status]);
 
   return (
-    <Badge tone={visualStatus} className={className}>
+    <Badge tone={badgeColor} className={className}>
       {badgeText}
     </Badge>
   );

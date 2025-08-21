@@ -1,4 +1,5 @@
 import ky from 'ky';
+import { Assignment, Strip, StudentProgress } from './types';
 
 export const api = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL,
@@ -14,32 +15,90 @@ export const api = ky.create({
 
 export async function authWithTelegram(initData: string) {
   return api.post('auth/telegram', { headers: { 'X-Telegram-Init-Data': initData } })
-    .json<{ ok: boolean; token: string; user?: any }>();
+    .json<{ ok: boolean; token: string; user?: { id: number; name: string; role: string } }>();
 }
 
-export const getMe = () => api.get('me').json<{ ok: boolean; user: any }>();
-export const getStudentToday = () => api.get('student/assignment/today').json<{ ok: boolean; assignment: any|null }>();
-export const postSubmitAssignment = (id: number) => api.post(`student/assignment/${id}/submit`).json<{ ok: boolean }>();
-export const getStudentStrips = () => api.get('student/strips').json<{ ok: boolean; strips: any[] }>();
-export const getStudentProgress = () => api.get('student/progress').json<{ ok: boolean; currentStreak:number; bestStreak:number; avgRating:number; daysDone:number; daysTotal:number }>();
+export const getMe = () => api.get('me').json<{ ok: boolean; user: { id: number; name: string; role: string; timezone?: string } }>();
+export const getStudentToday = () =>
+  api.get('student/assignment/today')
+    .json<{ ok: true; assignment: Assignment | null }>();
 
-export const getMentorStudents = () => api.get('mentor/students').json<{ ok: boolean; students: any[] }>();
+export const submitAssignment = (id: number) =>
+  api.post(`student/assignment/${id}/submit`).json<{ ok: true }>();
+
+export const getStudentStrips = () =>
+  api.get('student/strips')
+    .json<{ ok: true; strips: Strip[] }>();
+
+export const getStudentProgress = () =>
+  api.get('student/progress')
+    .json<{ ok: true } & StudentProgress>();
+
+export const getMentorStudents = () =>
+  api.get('mentor/students').json<{ ok: true; students: Array<{
+    id: number; name: string;
+    activeBook: { id:number; title:string; cover_url?:string } | null;
+    progressPercent: number;
+    todayStatus: 'pending'|'submitted'|'missed'|'graded'|null;
+    lastRating: number | null;
+    currentStreak: number;
+  }> }>();
 
 // STUDENT
-export const getStudentAssignmentByDate = (date:string) =>
-  api.get('student/assignment/by-date', { searchParams: { date }})
-    .json<{ ok:boolean; assignment: any|null }>();
+export const getStudentAssignmentByDate = (date: string) =>
+  api.get('student/assignment/by-date', { searchParams: { date } })
+    .json<{ ok: true; assignment: Assignment | null }>();
+
 export const getBooksAvailable = () =>
-  api.get('books/available').json<{ ok:boolean; books: any[] }>();
+  api.get('books/available').json<{ ok: true; books: Array<{ 
+    id:number; 
+    title:string; 
+    author:string; 
+    category:string; 
+    difficulty:number; 
+    cover_url?:string; 
+    source_url?:string 
+  }> }>();
 
 // MENTOR
-export const getMentorStudentCard = (id:number) =>
-  api.get(`mentor/students/${id}`).json<{ ok:boolean; student:any; activeBook:any; today:any; strips:any[]; recentRatings:any[]; currentStreak:number; bestStreak:number; avgRating:number }>();
-export const patchAssignment = (id:number, body:any) =>
-  api.patch(`mentor/assignments/${id}`, { json: body }).json<{ ok:boolean }>();
-export const gradeAssignment = (id:number, body:{ mentor_rating:number; mentor_comment?:string }) =>
-  api.post(`mentor/assignments/${id}/grade`, { json: body }).json<{ ok:boolean }>();
-export const generateAssignments = (body:any) =>
-  api.post('mentor/assignments/generate', { json: body }).json<{ ok:boolean; created:number; skippedExisting:number }>();
-export const assignStudentBook = (body:any) =>
-  api.post('mentor/student-books/assign', { json: body }).json<{ ok:boolean; student_book_id:number }>();
+export const getMentorStudentCard = (id: number) =>
+  api.get(`mentor/students/${id}`).json<{ 
+    ok: true; 
+    student: { id: number; name: string; timezone: string }; 
+    activeBook: { id: number; title: string; author: string; cover_url?: string } | null; 
+    today: { assignment: Assignment | null }; 
+    strips: Strip[]; 
+    recentRatings: Array<{ date: string; rating: number; comment?: string }>; 
+    currentStreak: number; 
+    bestStreak: number; 
+    avgRating: number 
+  }>();
+
+export const patchAssignment = (id: number, body: Partial<{
+  deadline_time: string;
+  target_percent: number | null;
+  target_page: number | null;
+  target_chapter: string | null;
+  target_last_paragraph: string | null;
+}>) => api.patch(`mentor/assignments/${id}`, { json: body }).json<{ ok: true }>();
+
+export const gradeAssignment = (id: number, body: { mentor_rating: number; mentor_comment?: string }) =>
+  api.post(`mentor/assignments/${id}/grade`, { json: body }).json<{ ok: true }>();
+
+export const generateAssignments = (body: { 
+  student_book_id:number; 
+  mode:'percent'|'page'; 
+  dailyTarget:number; 
+  deadline_time:string; 
+  startDate:string; 
+  endDate:string 
+}) =>
+  api.post('mentor/assignments/generate', { json: body }).json<{ ok: true; created: number; skippedExisting: number }>();
+
+export const assignStudentBook = (body: { 
+  student_id:number; 
+  book_id:number; 
+  progress_mode:'percent'|'page'; 
+  start_date:string 
+}) =>
+  api.post('mentor/student-books/assign', { json: body }).json<{ ok: true; student_book_id: number }>();

@@ -20,6 +20,8 @@ import {
   submitFx,
 } from "../../store/student";
 import { useNavigate } from "react-router-dom";
+import { resolveVisualStatus, mapAssignmentToDayStripStatus, mapStatusToColor } from "../../lib/visualStatus";
+import { Assignment, Strip } from "../../api/types";
 
 export default function StudentToday() {
   const [today, strips, progress] = useUnit([$today, $strips, $progress]);
@@ -35,14 +37,25 @@ export default function StudentToday() {
     loadProgress();
   }, []);
 
-  // Функция для проверки, прошел ли дедлайн
-  const isDeadlinePassed = (date: string, time: string): boolean => {
-    const now = new Date();
-    const [hours, minutes] = time.split(":").map(Number);
-    const deadlineDate = new Date(date);
-    deadlineDate.setHours(hours, minutes);
-    return now > deadlineDate;
-  };
+  // Часовой пояс пользователя
+  const tz = "+03:00";
+
+  // Преобразуем данные для компонента DayStrips с использованием единой логики
+  const stripsData = strips?.map((strip: Strip) => {
+    // Если есть задание, определяем его визуальный статус
+    const visualStatus = strip.assignment ? resolveVisualStatus(strip.assignment, tz) : 'pending';
+    // Преобразуем визуальный статус в статус для DayStrips
+    const stripStatus = mapAssignmentToDayStripStatus(visualStatus);
+    
+    // Преобразуем mentor_rating в number | undefined для соответствия типу DayStripItem
+    const rating = strip.assignment?.mentor_rating !== null ? strip.assignment?.mentor_rating : undefined;
+    
+    return {
+      date: strip.date,
+      status: stripStatus,
+      rating
+    };
+  }) || [];
 
   // Обработчик клика по полоске дня
   const handleStripSelect = (idx: number) => {
@@ -59,7 +72,7 @@ export default function StudentToday() {
           <div style={{ fontWeight: 600, marginBottom: 8 }}>
             Прогресс по дням
           </div>
-          <DayStrips items={strips} onSelect={handleStripSelect} />
+          <DayStrips items={stripsData} onSelect={handleStripSelect} />
         </div>
         {today ? (
           <>
@@ -77,13 +90,13 @@ export default function StudentToday() {
                 style={{ alignItems: "center", gap: "8px", marginTop: "8px" }}
               >
                 <b>Дедлайн:</b>
-                {today.status === "pending" ? (
-                  <DeadlineTimer
-                    date={today.deadline_date}
-                    time={today.deadline_time}
-                    tz="+0300"
-                  />
-                ) : (
+                <DeadlineTimer
+                  date={today.date}
+                  time={today.deadline_time}
+                  tz={tz}
+                  status={resolveVisualStatus(today, tz)}
+                />
+                {resolveVisualStatus(today, tz) !== "pending" && (
                   <span>{today.deadline_time}</span>
                 )}
               </div>
@@ -93,32 +106,23 @@ export default function StudentToday() {
               >
                 <b>Статус:</b>
                 <DeadlineBadge
-                  date={today.deadline_date}
+                  date={today.date}
                   time={today.deadline_time}
-                  tz="+0300"
-                  status={
-                    today.status === "done"
-                      ? "submitted"
-                      : today.status === "graded"
-                      ? "graded"
-                      : today.status === "missed"
-                      ? "missed"
-                      : "pending"
-                  }
+                  tz={tz}
+                  status={today.status}
                 />
               </div>
             </div>
-            {today.status === "pending" &&
-              !isDeadlinePassed(today.deadline_date, today.deadline_time) && (
+            {resolveVisualStatus(today, tz) === "pending" && (
                 <Button
                   onClick={async () => {
                     try {
                       await submit(today.id);
                       await load();
                       await loadStrips();
-                      toast.success("Задание успешно отмечено как прочитанное");
+                      toast.success("Отмечено!");
                     } catch (error) {
-                      toast.error("Ошибка при отправке задания");
+                      toast.error("Не удалось отправить");
                       console.error(error);
                     }
                   }}

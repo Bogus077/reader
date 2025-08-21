@@ -6,6 +6,8 @@ import { ru } from 'date-fns/locale';
 import { ArrowLeft, ArrowRight, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Topbar, Tabbar, Card, Badge, Button, RatingStars } from '../../ui';
 import { $strips, $assignmentByDate, loadStripsFx, loadAssignmentByDateFx } from '../../store/student';
+import { resolveVisualStatus, mapAssignmentToDayStripStatus, mapStatusToColor } from "../../lib/visualStatus";
+import { Assignment } from "../../api/types";
 import styles from './DayHistory.module.scss';
 
 // Функция для форматирования даты в формате "1 января"
@@ -28,35 +30,46 @@ const formatDateTime = (dateString: string): string => {
   }
 };
 
-// Функция для определения статуса дня
-const getStatusBadge = (status: string, dateString?: string) => {
-  switch (status) {
+// Функция для определения статуса дня с использованием resolveVisualStatus и mapStatusToColor
+const getStatusBadge = (assignment: Assignment, tz = '+03:00') => {
+  const visualStatus = resolveVisualStatus(assignment, tz);
+  const color = mapStatusToColor(visualStatus);
+  
+  switch (visualStatus) {
     case 'submitted':
+      return <Badge color={color}>Отмечено</Badge>;
     case 'graded':
-      return <Badge tone="success">Выполнено</Badge>;
+      return <Badge color={color}>Проверено</Badge>;
     case 'missed':
-      return <Badge tone="danger">Пропущено</Badge>;
-    case 'pending':
-      const today = new Date().toISOString().split('T')[0];
-      const isToday = dateString ? today === dateString : false;
-      return isToday ? 
-        <Badge tone="warning">Сегодня</Badge> : 
-        <Badge tone="info">Предстоит</Badge>;
+      return <Badge color={color}>Пропущено</Badge>;
     default:
-      return <Badge tone="default">Неизвестно</Badge>;
+      return <Badge color={color}>Ожидает</Badge>;
   }
 };
 
 // Функция для получения иконки статуса
-const getStatusIcon = (status: string) => {
-  switch (status) {
+const getStatusIcon = (assignment: Assignment, tz = '+03:00') => {
+  const visualStatus = resolveVisualStatus(assignment, tz);
+  const color = mapStatusToColor(visualStatus);
+  
+  // Цвета для иконок в зависимости от статуса
+  const colorMap: Record<string, string> = {
+    green: '#4CAF50',
+    blue: '#2196F3',
+    red: '#F44336',
+    grey: '#9E9E9E'
+  };
+  
+  const iconColor = colorMap[color] || colorMap.grey;
+  
+  switch (visualStatus) {
     case 'submitted':
     case 'graded':
-      return <CheckCircle size={18} color="#4caf50" />;
+      return <CheckCircle size={16} color={iconColor} />;
     case 'missed':
-      return <XCircle size={18} color="#f44336" />;
+      return <XCircle size={16} color={iconColor} />;
     default:
-      return <Clock size={18} color="#2196f3" />;
+      return <Clock size={16} color={iconColor} />;
   }
 };
 
@@ -80,23 +93,43 @@ export const DayHistory: FC = () => {
     loadStrips();
   }, [date, navigate, loadAssignmentByDate, loadStrips]);
   
-  // Находим текущий сегмент в strips
+  // Преобразуем данные для компонента DayStrips
+  const stripsData = useMemo(() => {
+    return strips.map((strip) => {
+      // Если есть задание, определяем его визуальный статус
+      const visualStatus = strip.assignment ? resolveVisualStatus(strip.assignment, '+03:00') : 'pending';
+      // Преобразуем визуальный статус в статус для DayStrips
+      const stripStatus = mapAssignmentToDayStripStatus(visualStatus);
+      
+      // Преобразуем mentor_rating в number | undefined для соответствия типу DayStripItem
+      const rating = strip.assignment?.mentor_rating !== null ? strip.assignment?.mentor_rating : undefined;
+      
+      return {
+        date: strip.date,
+        status: stripStatus,
+        rating
+      };
+    });
+  }, [strips]);
+  
+  // Находим текущий сегмент в strips и соответствующее задание
   const currentStrip = useMemo(() => {
-    return strips.find(strip => strip.date === date);
+    // Находим сегмент в исходных данных
+    return strips.find((strip) => strip.date === date);
   }, [strips, date]);
   
   // Находим индексы предыдущего и следующего дней
   const { prevDate, nextDate } = useMemo(() => {
-    if (!strips.length) return { prevDate: null, nextDate: null };
+    if (!stripsData.length) return { prevDate: null, nextDate: null };
     
-    const currentIndex = strips.findIndex(strip => strip.date === date);
+    const currentIndex = stripsData.findIndex(strip => strip.date === date);
     if (currentIndex === -1) return { prevDate: null, nextDate: null };
     
-    const prevDate = currentIndex > 0 ? strips[currentIndex - 1].date : null;
-    const nextDate = currentIndex < strips.length - 1 ? strips[currentIndex + 1].date : null;
+    const prevDate = currentIndex > 0 ? stripsData[currentIndex - 1].date : null;
+    const nextDate = currentIndex < stripsData.length - 1 ? stripsData[currentIndex + 1].date : null;
     
     return { prevDate, nextDate };
-  }, [strips, date]);
+  }, [stripsData, date]);
   
   // Если дата не указана, редирект уже выполнен
   if (!date) return null;
@@ -108,7 +141,7 @@ export const DayHistory: FC = () => {
         {/* Верхняя часть с датой и статусом */}
         <div className={styles.header}>
           <div className={styles.date}>{formatDate(date)}</div>
-          {currentStrip && getStatusBadge(currentStrip.status, date)}
+          {currentStrip?.assignment && getStatusBadge(assignmentByDate || currentStrip.assignment)}
         </div>
         
         {/* Карточка с заданием на день */}
@@ -120,9 +153,9 @@ export const DayHistory: FC = () => {
               <div className={styles.infoRow}>
                 <div className={styles.label}>Цель:</div>
                 <div className={styles.value}>
-                  {assignmentByDate.target_type === 'percent' && `${assignmentByDate.target_value}%`}
-                  {assignmentByDate.target_type === 'page' && `стр. ${assignmentByDate.target_value}`}
-                  {assignmentByDate.target_type === 'chapter' && `глава ${assignmentByDate.target_value}`}
+                  {assignmentByDate?.target?.percent && `${assignmentByDate.target.percent}%`}
+                  {assignmentByDate?.target?.page && `стр. ${assignmentByDate.target.page}`}
+                  {assignmentByDate?.target?.chapter && `глава ${assignmentByDate.target.chapter}`}
                 </div>
               </div>
               
@@ -133,30 +166,45 @@ export const DayHistory: FC = () => {
                 </div>
               )}
               
-              {assignmentByDate.last_paragraph && (
+              {assignmentByDate?.target?.last_paragraph && (
                 <div className={styles.infoRow}>
                   <div className={styles.label}>Последний абзац:</div>
-                  <div className={styles.value}>"{assignmentByDate.last_paragraph}"</div>
+                  <div className={styles.value}>"{assignmentByDate.target.last_paragraph}"</div>
                 </div>
               )}
               
-              {assignmentByDate.deadline && (
-                <div className={styles.infoRow}>
-                  <div className={styles.label}>Дедлайн:</div>
-                  <div className={styles.value}>{formatDateTime(assignmentByDate.deadline)}</div>
-                </div>
-              )}
+              {/* Поддержка двух вариантов дедлайна */}
+              {(() => {
+                // Формируем ISO строку из даты и времени дедлайна
+                const deadlineIso = assignmentByDate?.date && assignmentByDate?.deadline_time 
+                  ? `${assignmentByDate.date}T${assignmentByDate.deadline_time}:00` 
+                  : null;
+                
+                return deadlineIso ? (
+                  <div className={styles.infoRow}>
+                    <div className={styles.label}>Дедлайн:</div>
+                    <div className={styles.value}>{formatDateTime(deadlineIso)}</div>
+                  </div>
+                ) : null;
+              })()}
             </>
           ) : currentStrip ? (
             <div>
               <div className={styles.infoRow}>
                 <div className={styles.label}>Статус:</div>
                 <div className={styles.value} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {getStatusIcon(currentStrip.status)}
-                  {currentStrip.status === 'submitted' && 'Отмечено как прочитано'}
-                  {currentStrip.status === 'graded' && 'Проверено ментором'}
-                  {currentStrip.status === 'missed' && 'Пропущено'}
-                  {currentStrip.status === 'pending' && 'Ожидает выполнения'}
+                  {currentStrip?.assignment && getStatusIcon(currentStrip.assignment)}
+                  {(() => {
+                    if (!currentStrip?.assignment) return 'Нет задания';
+                    
+                    const visualStatus = resolveVisualStatus(currentStrip.assignment, '+03:00');
+                    switch (visualStatus) {
+                      case 'submitted': return 'Отмечено как прочитано';
+                      case 'graded': return 'Проверено ментором';
+                      case 'missed': return 'Пропущено';
+                      default: return 'Ожидает выполнения';
+                    }
+                  })()}
                 </div>
               </div>
             </div>

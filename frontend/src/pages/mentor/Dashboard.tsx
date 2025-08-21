@@ -51,8 +51,11 @@ export default function MentorDashboard() {
               />
             </div>
             <div className="hstack" style={{flexWrap:'wrap', gap:8, marginBottom: '12px'}}>
-              <Badge tone={s.todayStatus === 'done' ? 'success' : s.todayStatus === 'missed' ? 'danger' : 'info'}>
-                Сегодня: {s.todayStatus ?? '—'}
+              <Badge tone={s.todayStatus === 'graded' ? 'success' : s.todayStatus === 'missed' ? 'danger' : 'info'}>
+                Сегодня: {s.todayStatus === 'graded' ? 'Оценено' : 
+                          s.todayStatus === 'missed' ? 'Просрочено' : 
+                          s.todayStatus === 'submitted' ? 'Сдано' : 
+                          s.todayStatus === 'pending' ? 'В процессе' : '—'}
               </Badge>
               <Badge tone="info">
                 Прогресс: {s.progressPercent ?? 0}%

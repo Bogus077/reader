@@ -1,5 +1,6 @@
 import { FC, KeyboardEvent, useCallback } from 'react';
 import clsx from 'clsx';
+import { mapStatusToColor } from '../../../lib/visualStatus';
 import styles from './DayStrips.module.scss';
 
 export type DayStripStatus = 'done' | 'current' | 'future' | 'missed';
@@ -64,21 +65,45 @@ export const DayStrips: FC<DayStripsProps> = ({
   const renderRating = (rating?: number) => {
     if (rating === undefined) return null;
     
+    const starStyle = {
+      color: 'rgba(255, 255, 255, 0.3)'
+    };
+    
+    const filledStarStyle = {
+      color: '#fff'
+    };
+    
     return (
       <div className={styles.rating}>
         {Array.from({ length: 5 }).map((_, i) => (
           <span 
             key={i} 
-            className={clsx(
-              styles.star, 
-              i < rating && styles.filled
-            )}
+            style={i < rating ? filledStarStyle : starStyle}
           >
             ★
           </span>
         ))}
       </div>
     );
+  };
+  
+  // Функция для получения стиля полоски на основе статуса
+  const getStripStyle = (status: DayStripStatus) => {
+    // Получаем цвет из функции mapStatusToColor
+    const color = mapStatusToColor(status);
+    
+    // Цветовая карта для полосок
+    const colorMap: Record<string, string> = {
+      green: '#2ecc71',  // done
+      blue: '#4a6cf7',   // current
+      red: '#e74c3c',    // missed
+      grey: '#95a5a6'    // future
+    };
+    
+    return {
+      backgroundColor: colorMap[color] || colorMap.grey,
+      color: 'white'
+    };
   };
   
   return (
@@ -88,9 +113,9 @@ export const DayStrips: FC<DayStripsProps> = ({
           key={`${item.date}-${idx}`}
           className={clsx(
             styles.strip,
-            styles[item.status],
             onSelect && styles.selectable
           )}
+          style={getStripStyle(item.status)}
           onClick={onSelect ? () => handleClick(idx) : undefined}
           onKeyDown={onSelect ? (e) => handleKeyDown(e, idx) : undefined}
           tabIndex={onSelect ? 0 : undefined}
