@@ -9,7 +9,7 @@ export type RadioOption = {
   disabled?: boolean;
 };
 
-export type RadioGroupProps = HTMLAttributes<HTMLFieldSetElement> & {
+export type RadioGroupProps = Omit<HTMLAttributes<HTMLFieldSetElement>, 'onChange'> & {
   name: string;
   options: RadioOption[];
   value?: string;

@@ -1,6 +1,0 @@
-.strips { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
-.strips__seg { height: 10px; border-radius: 6px; border: 0; cursor:pointer; background: var(--muted); }
-.strips__seg--done { background: var(--success); }
-.strips__seg--current { background: var(--primary); }
-.strips__seg--future { background: #d9dbe0; }
-.strips__seg--missed { background: #ffb4b4; }

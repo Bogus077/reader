@@ -1,6 +1,7 @@
 import { FC } from "react";
 import clsx from "clsx";
 import { Home, BookOpen, BarChart2 } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 import styles from "./Tabbar.module.scss";
 
 export type TabItem = {
@@ -16,33 +17,42 @@ export type TabItem = {
    * Название иконки (поддерживаются: 'home', 'library', 'progress')
    */
   icon: 'home' | 'library' | 'progress';
+  /**
+   * Путь для навигации
+   */
+  path: string;
 };
 
 export type TabbarProps = {
-  /**
-   * Список вкладок
-   */
-  tabs: TabItem[];
-  /**
-   * Идентификатор активной вкладки
-   */
-  activeTab: string;
-  /**
-   * Обработчик выбора вкладки
-   */
-  onTabChange: (tabId: string) => void;
   /**
    * Дополнительные CSS классы
    */
   className?: string;
 };
 
-export const Tabbar: FC<TabbarProps> = ({
-  tabs,
-  activeTab,
-  onTabChange,
-  className,
-}) => {
+export const Tabbar: FC<TabbarProps> = ({ className }) => {
+  const location = useLocation();
+  
+  const tabs: TabItem[] = [
+    {
+      id: 'home',
+      label: 'Домой',
+      icon: 'home',
+      path: '/'
+    },
+    {
+      id: 'progress',
+      label: 'Прогресс',
+      icon: 'progress',
+      path: '/progress'
+    },
+    {
+      id: 'library',
+      label: 'Библиотека',
+      icon: 'library',
+      path: '/library'
+    }
+  ];
   // Функция для получения компонента иконки по названию
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
@@ -60,21 +70,21 @@ export const Tabbar: FC<TabbarProps> = ({
   return (
     <nav className={clsx(styles.tabbar, className)}>
       {tabs.map((tab) => (
-        <button
+        <NavLink
           key={tab.id}
-          className={clsx(
+          to={tab.path}
+          className={({ isActive }) => clsx(
             styles.tab,
-            activeTab === tab.id && styles.active
+            isActive && styles.active
           )}
-          onClick={() => onTabChange(tab.id)}
-          aria-selected={activeTab === tab.id}
+          aria-selected={location.pathname === tab.path}
           role="tab"
         >
           <div className={styles.icon}>
             {getIconComponent(tab.icon)}
           </div>
           <span className={styles.label}>{tab.label}</span>
-        </button>
+        </NavLink>
       ))}
     </nav>
   );

@@ -1,0 +1,70 @@
+.container {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.date {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.card {
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  
+  .label {
+    min-width: 120px;
+    color: #666;
+  }
+  
+  .value {
+    flex: 1;
+  }
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 8px;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 8px 12px;
+  justify-content: center;
+  
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 480px) {
+    width: 100%;
+  }
+}
