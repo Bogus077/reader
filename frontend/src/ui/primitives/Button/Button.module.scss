@@ -1,0 +1,147 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: var(--space-2) var(--space-4);
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  outline: none;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+}
+
+/* Варианты */
+.primary {
+  color: #fff;
+  background-color: var(--primary);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.ghost {
+  color: var(--primary);
+  background-color: transparent;
+  border-color: var(--primary);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--primary-light);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.danger {
+  color: #fff;
+  background-color: var(--danger);
+  
+  &:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--danger) 90%, black);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.subtle {
+  color: var(--gray-700);
+  background-color: var(--gray-100);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--gray-200);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+/* Размеры */
+.sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+}
+
+.md {
+  padding: var(--space-2) var(--space-4);
+  font-size: 1rem;
+}
+
+.lg {
+  padding: var(--space-3) var(--space-5);
+  font-size: 1.125rem;
+}
+
+/* Состояние загрузки */
+.loading {
+  color: transparent !important;
+  
+  .spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: currentColor;
+  }
+}
+
+/* Полная ширина */
+.fullWidth {
+  width: 100%;
+}
+
+/* Иконки */
+.leftIcon, .rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Стили для IconButton */
+.iconButton {
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton.sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.iconButton.md {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.iconButton.lg {
+  width: 3rem;
+  height: 3rem;
+}

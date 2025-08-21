@@ -1,0 +1,76 @@
+.modal {
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.date {
+  font-size: 14px;
+  color: #666;
+}
+
+.summary {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.ratingContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ratingLabel {
+  font-size: 16px;
+  font-weight: 500;
+  margin-right: 16px;
+  min-width: 80px;
+}
+
+.rating {
+  flex-grow: 1;
+}
+
+.comment {
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  @media (max-width: 480px) {
+    justify-content: stretch;
+    
+    button {
+      flex: 1;
+    }
+  }
+}

@@ -1,0 +1,189 @@
+import { FC, useState, useEffect } from "react";
+import { Modal } from "../../feedback/Modal";
+import { Input } from "../../forms/Input";
+import { NumberInput } from "../../forms/NumberInput";
+import { TimeInput } from "../../forms/TimeInput";
+import { Textarea } from "../../forms/Textarea";
+import { Button } from "../../primitives/Button";
+import styles from "./AssignmentEditModal.module.scss";
+
+export type AssignmentData = {
+  title: string;
+  pages: number;
+  time: string;
+  description: string;
+};
+
+export type AssignmentEditModalProps = {
+  /**
+   * Флаг, указывающий, открыто ли модальное окно
+   */
+  isOpen: boolean;
+  /**
+   * Функция, вызываемая при закрытии модального окна
+   */
+  onClose: () => void;
+  /**
+   * Начальные данные задания (если редактируем существующее)
+   */
+  initialData?: Partial<AssignmentData>;
+  /**
+   * Функция, вызываемая при сохранении задания
+   */
+  onSubmit: (data: AssignmentData) => void;
+  /**
+   * Флаг, указывающий, что задание уже оценено и не может быть изменено
+   */
+  isGraded?: boolean;
+  /**
+   * Флаг, указывающий, что дедлайн задания прошел
+   */
+  isDeadlinePassed?: boolean;
+};
+
+export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
+  isOpen,
+  onClose,
+  initialData = {},
+  onSubmit,
+  isGraded = false,
+  isDeadlinePassed = false,
+}) => {
+  // Состояние для хранения данных формы
+  const [formData, setFormData] = useState<AssignmentData>({
+    title: initialData.title || "",
+    pages: initialData.pages || 0,
+    time: initialData.time || "12:00",
+    description: initialData.description || "",
+  });
+
+  // Состояние для хранения ошибок валидации
+  const [errors, setErrors] = useState<Partial<Record<keyof AssignmentData, string>>>({});
+
+  // Определяем, должна ли форма быть заблокирована
+  const isDisabled = isGraded || isDeadlinePassed;
+
+  // Сообщение о причине блокировки формы
+  const disabledMessage = isGraded 
+    ? "Задание уже оценено и не может быть изменено" 
+    : isDeadlinePassed 
+      ? "Дедлайн задания прошел, изменение невозможно" 
+      : "";
+
+  // Обновляем данные формы при изменении initialData
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || "",
+        pages: initialData.pages || 0,
+        time: initialData.time || "12:00",
+        description: initialData.description || "",
+      });
+    }
+  }, [initialData]);
+
+  // Обработчики изменения полей формы
+  const handleChange = <K extends keyof AssignmentData>(field: K, value: AssignmentData[K]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // Очищаем ошибку при изменении поля
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Валидация формы
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof AssignmentData, string>> = {};
+    
+    if (!formData.title.trim()) {
+      newErrors.title = "Название задания обязательно";
+    }
+    
+    if (formData.pages <= 0) {
+      newErrors.pages = "Количество страниц должно быть больше 0";
+    }
+    
+    if (!formData.time) {
+      newErrors.time = "Время выполнения обязательно";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Обработчик отправки формы
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit(formData);
+      onClose();
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className={styles.modal}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>
+          {initialData.title ? "Редактирование задания" : "Новое задание"}
+        </h2>
+        
+        {isDisabled && (
+          <div className={styles.disabledWarning}>
+            {disabledMessage}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.form}>
+        <Input
+          label="Название задания"
+          value={formData.title}
+          onChange={(e) => handleChange("title", e.target.value)}
+          placeholder="Введите название задания"
+          error={errors.title}
+          disabled={isDisabled}
+          required
+        />
+
+        <NumberInput
+          label="Количество страниц"
+          value={formData.pages}
+          onChange={(value) => handleChange("pages", value as number)}
+          min={1}
+          error={errors.pages}
+          disabled={isDisabled}
+          required
+        />
+
+        <TimeInput
+          label="Время выполнения"
+          value={formData.time}
+          onChange={(value) => handleChange("time", value)}
+          error={errors.time}
+          disabled={isDisabled}
+          required
+        />
+
+        <Textarea
+          label="Описание"
+          value={formData.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+          placeholder="Введите описание задания"
+          disabled={isDisabled}
+        />
+      </div>
+
+      <div className={styles.actions}>
+        <Button variant="ghost" onClick={onClose}>
+          Отмена
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isDisabled}
+        >
+          Сохранить
+        </Button>
+      </div>
+    </Modal>
+  );
+};

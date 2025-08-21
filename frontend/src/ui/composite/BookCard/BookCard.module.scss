@@ -1,0 +1,155 @@
+.card {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.clickable {
+  cursor: pointer;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  &:focus {
+    outline: 2px solid rgba(74, 108, 247, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+.coverWrapper {
+  flex-shrink: 0;
+  width: 120px;
+  height: 180px;
+  overflow: hidden;
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  
+  .clickable:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 16px;
+  gap: 8px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+  color: #333;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.author {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.category {
+  font-size: 12px;
+}
+
+.difficulty {
+  display: flex;
+  gap: 4px;
+}
+
+.difficultyDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  
+  &.active {
+    background-color: #f39c12;
+  }
+}
+
+.progressWrapper {
+  margin-top: 8px;
+}
+
+.progress {
+  height: 6px;
+}
+
+.action {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+// Компактный вариант
+.compact {
+  flex-direction: column;
+  width: 180px;
+  
+  .coverWrapper {
+    width: 100%;
+    height: 240px;
+  }
+  
+  .content {
+    height: 180px;
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .author {
+    font-size: 13px;
+  }
+  
+  .meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .action {
+    justify-content: center;
+  }
+}
+
+// Адаптивные стили
+@media (max-width: 576px) {
+  .card:not(.compact) {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    
+    .coverWrapper {
+      width: 100%;
+      height: 200px;
+    }
+  }
+}

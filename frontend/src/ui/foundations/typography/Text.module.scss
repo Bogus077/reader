@@ -1,0 +1,30 @@
+.text {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.default {
+  color: var(--fg);
+}
+
+.muted {
+  color: var(--gray-500);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.success {
+  color: var(--success);
+}
+
+.dim {
+  opacity: 0.8;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

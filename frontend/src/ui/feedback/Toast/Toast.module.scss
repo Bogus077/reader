@@ -1,0 +1,154 @@
+.viewport {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 2000;
+  max-width: 100%;
+  width: 360px;
+  padding: var(--space-4);
+
+  @media (min-width: 768px) {
+    bottom: var(--space-4);
+    right: var(--space-4);
+  }
+
+  @media (max-width: 767px) {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+}
+
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  background-color: var(--white);
+  animation: slideIn 0.3s ease-out;
+
+  &.exiting {
+    animation: slideOut 0.3s ease-in forwards;
+  }
+
+  @media (max-width: 767px) {
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+.success {
+  border-left: 4px solid var(--success);
+}
+
+.error {
+  border-left: 4px solid var(--danger);
+}
+
+.info {
+  border-left: 4px solid var(--info);
+}
+
+.icon {
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+
+  &.success {
+    color: var(--success);
+  }
+
+  &.error {
+    color: var(--danger);
+  }
+
+  &.info {
+    color: var(--info);
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--gray-900);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: var(--space-2);
+  cursor: pointer;
+  color: var(--gray-500);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: var(--gray-700);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    border-radius: 2px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  @keyframes slideIn {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+}

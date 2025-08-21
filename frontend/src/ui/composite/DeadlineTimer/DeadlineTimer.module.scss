@@ -1,0 +1,23 @@
+.timer {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  color: #e67e22;
+  font-weight: 500;
+  
+  &::before {
+    content: '⏱';
+    margin-right: 4px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .timer {
+    font-size: 12px;
+    
+    &::before {
+      font-size: 14px;
+    }
+  }
+}

@@ -1,0 +1,53 @@
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+  
+  // Безопасная зона для iOS
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: calc(60px + env(safe-area-inset-bottom, 0));
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: #95a5a6;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: #4a6cf7;
+  }
+  
+  &.active {
+    color: #4a6cf7;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+}

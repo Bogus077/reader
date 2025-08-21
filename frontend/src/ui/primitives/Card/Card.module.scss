@@ -1,0 +1,32 @@
+.card {
+  position: relative;
+  border-radius: var(--radius);
+  background-color: var(--card);
+  overflow: hidden;
+}
+
+/* Elevation variants */
+.elevation0 {
+  box-shadow: none;
+}
+
+.elevation1 {
+  box-shadow: var(--shadow-sm);
+}
+
+.elevation2 {
+  box-shadow: var(--shadow);
+}
+
+/* Padding variants */
+.paddingSm {
+  padding: var(--space-3);
+}
+
+.paddingMd {
+  padding: var(--space-4);
+}
+
+.paddingLg {
+  padding: var(--space-6);
+}

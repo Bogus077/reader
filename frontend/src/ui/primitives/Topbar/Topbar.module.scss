@@ -1,0 +1,43 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 16px;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  
+  // Безопасная зона для iOS
+  padding-top: env(safe-area-inset-top, 0);
+  height: calc(60px + env(safe-area-inset-top, 0));
+}
+
+.left, .right {
+  display: flex;
+  align-items: center;
+  min-width: 60px;
+  height: 100%;
+}
+
+.left {
+  justify-content: flex-start;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

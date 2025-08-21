@@ -1,0 +1,19 @@
+.paper {
+  position: relative;
+  border-radius: var(--radius);
+  background-color: var(--card);
+  overflow: hidden;
+}
+
+/* Padding variants */
+.paddingSm {
+  padding: var(--space-3);
+}
+
+.paddingMd {
+  padding: var(--space-4);
+}
+
+.paddingLg {
+  padding: var(--space-6);
+}

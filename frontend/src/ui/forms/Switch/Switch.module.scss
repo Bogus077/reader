@@ -1,0 +1,75 @@
+.switchContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.labelLeft {
+  margin-right: var(--space-2);
+}
+
+.labelRight {
+  margin-left: var(--space-2);
+}
+
+.switch {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  
+  &:focus-visible + .switchTrack {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  
+  &:disabled + .switchTrack {
+    background-color: var(--gray-200);
+    cursor: not-allowed;
+    
+    .switchThumb {
+      background-color: var(--gray-400);
+    }
+  }
+  
+  &:disabled ~ .labelLeft,
+  &:disabled ~ .labelRight {
+    color: var(--gray-500);
+    cursor: not-allowed;
+  }
+  
+  &:checked + .switchTrack {
+    background-color: var(--primary);
+    
+    .switchThumb {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.switchTrack {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  background-color: var(--gray-300);
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--white);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}

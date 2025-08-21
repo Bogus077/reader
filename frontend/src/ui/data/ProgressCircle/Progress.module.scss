@@ -1,0 +1,130 @@
+// Общие переменные для цветов тонов
+$primary-color: #4a6cf7;
+$success-color: #2ecc71;
+$danger-color: #e74c3c;
+$muted-color: #95a5a6;
+$background-color: #f1f1f1;
+
+// ProgressBar стили
+.progressBarContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 8px 0;
+  gap: 8px;
+}
+
+.progressBar {
+  position: relative;
+  height: 8px;
+  flex-grow: 1;
+  border-radius: 4px;
+  background-color: $background-color;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+}
+
+.label {
+  font-size: 14px;
+  color: #333;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.value {
+  font-size: 14px;
+  color: #333;
+  min-width: 40px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+// ProgressCircle стили
+.progressCircleContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressCircle {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.progressCircleBackground {
+  stroke: $background-color;
+}
+
+.progressCircleFill {
+  transition: stroke-dashoffset 0.3s ease-in-out;
+}
+
+.progressCircleValue {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+// Тоны для ProgressBar
+.primary .progressBarFill {
+  background-color: $primary-color;
+}
+
+.success .progressBarFill {
+  background-color: $success-color;
+}
+
+.danger .progressBarFill {
+  background-color: $danger-color;
+}
+
+.muted .progressBarFill {
+  background-color: $muted-color;
+}
+
+// Тоны для ProgressCircle
+.primary .progressCircleFill {
+  stroke: $primary-color;
+}
+
+.success .progressCircleFill {
+  stroke: $success-color;
+}
+
+.danger .progressCircleFill {
+  stroke: $danger-color;
+}
+
+.muted .progressCircleFill {
+  stroke: $muted-color;
+}
+
+// Адаптивные стили для мобильных устройств
+@media (max-width: 768px) {
+  .progressBarContainer {
+    flex-wrap: wrap;
+  }
+  
+  .label {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  
+  .progressCircleValue {
+    font-size: 12px;
+  }
+}
