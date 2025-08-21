@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-reading_app}
       POSTGRES_USER: ${DB_USER:-reading_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
-    ports: ["5433:5433"]
+    ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
 
   api:
@@ -17,7 +17,7 @@ services:
     environment:
       PORT: ${PORT:-3010}
       DB_HOST: postgres
-      DB_PORT: ${DB_PORT:-5433}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-reading_app}
       DB_USER: ${DB_USER:-reading_user}
       DB_PASSWORD: ${DB_PASSWORD:-change_me}

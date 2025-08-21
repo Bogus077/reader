@@ -2,7 +2,7 @@
   "name": "reader-backend",
   "version": "1.0.0",
   "description": "Reader backend API",
-  "main": "dist/app.js",
+  "main": "dist/app.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",

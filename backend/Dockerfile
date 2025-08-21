@@ -21,5 +21,6 @@ COPY .env* ./
 COPY .sequelizerc ./
 COPY migrations ./migrations
 COPY seeders ./seeders
+COPY sequelize-cli.cjs ./
 EXPOSE 3010
 CMD ["node", "dist/app.js"]
