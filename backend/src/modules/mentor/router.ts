@@ -13,6 +13,7 @@ import { sequelize } from '../../lib/db';
 import dayjs from 'dayjs';
 import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
+import Streak from '../streaks/model';
 import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema } from './schemas';
 
 const router = express.Router();
@@ -306,7 +307,6 @@ router.get('/students', requireAuth, requireMentor, async (req, res) => {
     });
   }
 });
-
 /**
  * GET /mentor/students/:id
  * Получить детальную информацию о конкретном студенте
@@ -419,12 +419,45 @@ router.get('/students/:id', requireAuth, requireMentor, async (req, res) => {
       };
     }).filter(rating => rating.date !== null);
     
+    // Получаем лучшую серию из таблицы streaks
+    let bestStreak = 0;
+    const streakRecord = await Streak.findOne({ where: { student_id: studentId } });
+    if (streakRecord) {
+      bestStreak = streakRecord.best_len;
+    }
+
+    // Вычисляем среднюю оценку по активной книге (только по оценённым заданиям)
+    let avgRating = 0;
+    if (studentBook) {
+      const recaps = await Recap.findAll({
+        include: [{
+          model: Assignment,
+          as: 'assignment',
+          where: {
+            student_book_id: studentBook.id,
+            status: 'graded'
+          },
+          required: true
+        }]
+      });
+
+      if (recaps.length > 0) {
+        const validRatings = recaps
+          .map(r => r.mentor_rating)
+          .filter(r => r !== null) as number[];
+        if (validRatings.length > 0) {
+          const sum = validRatings.reduce((acc, r) => acc + r, 0);
+          avgRating = Math.round((sum / validRatings.length) * 10) / 10;
+        }
+      }
+    }
+
     return res.json({
       ok: true,
       student: {
         id: student.id,
         name: student.name,
-        tz: student.tz
+        timezone: student.tz
       },
       activeBook,
       today: {
@@ -432,7 +465,9 @@ router.get('/students/:id', requireAuth, requireMentor, async (req, res) => {
       },
       strips,
       recentRatings,
-      currentStreak
+      currentStreak,
+      bestStreak,
+      avgRating
     });
   } catch (error) {
     console.error('Error fetching student details:', error);
