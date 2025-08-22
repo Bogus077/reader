@@ -4,7 +4,7 @@ import styles from './Button.module.scss';
 import { Spinner } from '../Spinner';
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'ghost' | 'danger' | 'subtle';
+  variant?: 'primary' | 'success' | 'secondary' | 'ghost' | 'danger' | 'subtle';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   leftIcon?: ReactNode;

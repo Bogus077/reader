@@ -3,41 +3,63 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  font-weight: 500;
-  line-height: 1;
   white-space: nowrap;
   padding: var(--space-1) var(--space-3);
+
+  background-color: var(--badge-bg, var(--muted));
+  color: var(--badge-fg, var(--gray-700));
+
+  font-weight: 500;
+  line-height: 1;
   font-size: 0.875rem;
 }
 
-/* Тона */
 .default {
-  background-color: var(--muted);
-  color: var(--gray-700);
+  --badge-bg: var(--muted);
+  --badge-fg: var(--gray-700);
 }
 
 .info {
-  background-color: var(--primary-light);
-  color: var(--primary);
+  --badge-bg: var(--info);
+  --badge-fg: #fff;
 }
 
 .success {
-  background-color: var(--success-light);
-  color: var(--success);
+  --badge-bg: var(--success);
+  --badge-fg: #fff;
 }
 
 .warning {
-  background-color: var(--warn-light);
-  color: var(--warn);
+  --badge-bg: var(--warn);
+  --badge-fg: #fff;
 }
 
 .danger {
-  background-color: var(--danger-light);
-  color: var(--danger);
+  --badge-bg: var(--danger);
+  --badge-fg: #fff;
 }
 
-/* Мягкий вариант */
-.soft {
-  opacity: 0.8;
-  font-weight: 400;
+.soft.default {
+  --badge-bg: var(--muted);
+  --badge-fg: var(--gray-700);
+}
+
+.soft.info {
+  --badge-bg: var(--info-light);
+  --badge-fg: var(--info);
+}
+
+.soft.success {
+  --badge-bg: var(--success-light);
+  --badge-fg: var(--success);
+}
+
+.soft.warning {
+  --badge-bg: var(--warn-light);
+  --badge-fg: var(--warn);
+}
+
+.soft.danger {
+  --badge-bg: var(--danger-light);
+  --badge-fg: var(--danger);
 }

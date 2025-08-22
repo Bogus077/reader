@@ -26,3 +26,36 @@
   z-index: 1001;
   box-sizing: border-box;
 }
+
+@media (max-width: 767px) {
+  .backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    max-width: 100vw;
+  }
+
+  .modal {
+    position: relative;
+    z-index: 1001;
+    width: 100%;
+    max-width: 100%;
+    height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--space-4) var(--space-6)
+      calc(var(--space-6) + env(safe-area-inset-bottom, 0));
+    margin: 0;
+    box-shadow: var(--shadow-lg);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+  }
+}

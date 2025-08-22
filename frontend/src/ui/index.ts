@@ -22,6 +22,7 @@ export * from './data';
 export * from './feedback/Drawer';
 export * from './feedback/Modal';
 export * from './feedback/Toast';
+export * from './feedback/Loader';
 
 // Composite
 export * from './composite';

@@ -1,0 +1,29 @@
+.card {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #fff7e6 0%, #fff1f1 100%);
+  color: var(--fg);
+  text-align: left;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.sub {
+  position: relative;
+  display: block;
+  color: var(--gray-700);
+  font-size: 0.95rem;
+}

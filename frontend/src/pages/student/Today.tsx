@@ -3,10 +3,11 @@ import {
   Card,
   Button,
   DayStrips,
-  DeadlineBadge,
   DeadlineTimer,
   Topbar,
   Tabbar,
+  InfoCallout,
+  StreakCard,
 } from "../../ui";
 import { toast } from "../../ui/feedback/Toast";
 import { useUnit } from "effector-react";
@@ -20,8 +21,9 @@ import {
   submitFx,
 } from "../../store/student";
 import { useNavigate } from "react-router-dom";
-import { resolveVisualStatus, mapAssignmentToDayStripStatus, mapStatusToColor } from "../../lib/visualStatus";
-import { Assignment, Strip } from "../../api/types";
+import { resolveVisualStatus, mapAssignmentToDayStripStatus } from "../../lib/visualStatus";
+import { Strip } from "../../api/types";
+import { BookOpen, ClipboardList, Clock, CheckCircle2 } from "lucide-react";
 
 export default function StudentToday() {
   const [today, strips, progress] = useUnit([$today, $strips, $progress]);
@@ -69,92 +71,85 @@ export default function StudentToday() {
       <Topbar title="Сегодня" />
       <Card>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>
-            Прогресс по дням
+          <div className="hstack" style={{ alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <BookOpen size={18} color="var(--gray-700)" />
+            <div style={{ fontWeight: 600 }}>Прогресс по дням</div>
           </div>
           <DayStrips items={stripsData} onSelect={handleStripSelect} />
         </div>
+      </Card>
+
+      <div style={{ height: 12 }} />
+
+      <Card>
+        <div className="hstack" style={{ alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <ClipboardList size={18} color="var(--gray-700)" />
+          <div style={{ fontWeight: 700 }}>Задание на сегодня</div>
+        </div>
+
         {today ? (
           <>
-            <div style={{ margin: "12px 0" }}>
-              <div>
-                <b>Читать до:</b>{" "}
-                {today?.target?.percent
-                  ? `${today.target.percent}%`
-                  : today?.target?.page
-                  ? `стр. ${today.target.page}`
-                  : today?.target?.chapter || "…"}
-              </div>
-              <div
-                className="hstack"
-                style={{ alignItems: "center", gap: "8px", marginTop: "8px" }}
-              >
-                <b>Дедлайн:</b>
+            <InfoCallout
+              title={<span>Читать до {today?.target?.percent ? `${today.target.percent}%` : today?.target?.page ? `страницы ${today.target.page}` : today?.target?.chapter || '…'}</span>}
+              description={today?.target?.last_paragraph ? `Последний абзац: "${today.target.last_paragraph}"` : undefined}
+              tone="info"
+            />
+
+            <div className="hstack" style={{ alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <Clock size={16} color="var(--danger)" />
+              <span style={{ color: 'var(--danger)' }}>Сдать до {today.deadline_time}</span>
+              <div style={{ marginLeft: 'auto' }}>
                 <DeadlineTimer
                   date={today.date}
                   time={today.deadline_time}
                   tz={tz}
                   status={resolveVisualStatus(today, tz)}
                 />
-                {resolveVisualStatus(today, tz) !== "pending" && (
-                  <span>{today.deadline_time}</span>
-                )}
-              </div>
-              <div
-                className="hstack"
-                style={{ alignItems: "center", gap: "8px", marginTop: "8px" }}
-              >
-                <b>Статус:</b>
-                <DeadlineBadge
-                  date={today.date}
-                  time={today.deadline_time}
-                  tz={tz}
-                  status={today.status}
-                />
               </div>
             </div>
+
+            <div style={{ height: 8 }} />
+
             {resolveVisualStatus(today, tz) === "pending" && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await submit(today.id);
-                      await load();
-                      await loadStrips();
-                      toast.success("Отмечено!");
-                    } catch (error) {
-                      toast.error("Не удалось отправить");
-                      console.error(error);
-                    }
-                  }}
-                >
-                  Отметить как прочитано
-                </Button>
-              )}
-            {today.status === "submitted" && <Button disabled>Отмечено</Button>}
+              <Button
+                variant="success"
+                onClick={async () => {
+                  try {
+                    await submit(today.id);
+                    await load();
+                    await loadStrips();
+                    toast.success("Отмечено!");
+                  } catch (error) {
+                    toast.error("Не удалось отправить");
+                    console.error(error);
+                  }
+                }}
+              >
+                <span className="hstack" style={{ alignItems: 'center', gap: 8 }}>
+                  <CheckCircle2 size={18} /> Отметить как прочитано
+                </span>
+              </Button>
+            )}
+            {today.status === "submitted" && (
+              <Button variant="success" disabled>
+                <span className="hstack" style={{ alignItems: 'center', gap: 8 }}>
+                  <CheckCircle2 size={18} /> Отмечено
+                </span>
+              </Button>
+            )}
           </>
         ) : (
-          <div>На сегодня заданий нет</div>
+          <div style={{ color: 'var(--gray-700)' }}>На сегодня заданий нет</div>
         )}
       </Card>
 
-      <div style={{ height: 16 }} />
-      <Card>
-        <div className="hstack" style={{ justifyContent: "space-between" }}>
-          <div>
-            <b>Серия сейчас:</b> {progress?.currentStreak ?? "—"}
-          </div>
-          <div>
-            <b>Лучшая серия:</b> {progress?.bestStreak ?? "—"}
-          </div>
-          <div>
-            <b>Средняя оценка:</b> {progress?.avgRating?.toFixed?.(1) ?? "—"}
-          </div>
-          <div>
-            <b>Выполнено дней:</b>{" "}
-            {progress ? `${progress.daysDone} / ${progress.daysTotal}` : "—"}
-          </div>
-        </div>
-      </Card>
+      {progress?.currentStreak ? (
+        <>
+          <div style={{ height: 12 }} />
+          <StreakCard days={progress.currentStreak} hint="Попробуй выписать 3 ключевых события из прочитанного" />
+        </>
+      ) : null}
+
       <Tabbar />
     </div>
   );

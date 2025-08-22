@@ -102,3 +102,16 @@ export const assignStudentBook = (body: {
   start_date:string 
 }) =>
   api.post('mentor/student-books/assign', { json: body }).json<{ ok: true; student_book_id: number }>();
+
+export const createMentorBook = (body: {
+  title: string;
+  author: string;
+  category: string;
+  difficulty: number; // 1..5
+  description?: string | null;
+  cover_url?: string | null;
+  source_url?: string | null;
+}) =>
+  api.post('mentor/books', { json: body }).json<{ ok: true; book: {
+    id:number; title:string; author:string; category:string; difficulty:number; description?:string|null; cover_url?:string|null; source_url?:string|null; created_by?: number|null;
+  } }>();

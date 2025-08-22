@@ -6,6 +6,8 @@ import StudentLibrary from './pages/student/Library';
 import DayHistory from './pages/student/DayHistory';
 import MentorDashboard from './pages/mentor/Dashboard';
 import MentorStudentCard from './pages/mentor/StudentCard';
+import MentorLibrary from './pages/mentor/Library';
+import MentorAddBook from './pages/mentor/AddBook';
 import UIPrimitives from './pages/ui-demo/Primitives';
 import UIData from './pages/ui-demo/Data';
 import UIFeedback from './pages/ui-demo/Feedback';
@@ -39,6 +41,10 @@ export default function App() {
           <Link to="/mentor" style={{marginLeft: '8px'}}>Дашборд</Link>
           <span style={{margin:'0 8px'}}>|</span>
           <Link to="/mentor/student/123">Карточка ученика</Link>
+          <span style={{margin:'0 8px'}}>|</span>
+          <Link to="/mentor/library">Библиотека</Link>
+          <span style={{margin:'0 8px'}}>|</span>
+          <Link to="/mentor/books/add">Добавить книгу</Link>
         </div>
         <div>
           <strong>UI:</strong>
@@ -60,6 +66,8 @@ export default function App() {
         {/* Менторские маршруты */}
         <Route path="/mentor" element={<MentorDashboard/>} />
         <Route path="/mentor/student/:id" element={<MentorStudentCard/>} />
+        <Route path="/mentor/library" element={<MentorLibrary/>} />
+        <Route path="/mentor/books/add" element={<MentorAddBook/>} />
         
         {/* UI демо маршруты */}
         <Route path="/ui/primitives" element={<UIPrimitives/>} />

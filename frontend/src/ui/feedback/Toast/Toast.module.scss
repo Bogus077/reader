@@ -14,10 +14,10 @@
   }
 
   @media (max-width: 767px) {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: calc(env(safe-area-inset-bottom, 0) + var(--space-2));
+    left: var(--space-2);
+    right: var(--space-2);
+    width: auto;
   }
 }
 
@@ -28,7 +28,7 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
-  background-color: var(--white);
+  background-color: transparent;
   animation: slideIn 0.3s ease-out;
 
   &.exiting {
@@ -36,20 +36,23 @@
   }
 
   @media (max-width: 767px) {
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: var(--radius);
   }
 }
 
 .success {
-  border-left: 4px solid var(--success);
+  background-color: var(--success-light);
+  color: #166534;
 }
 
 .error {
-  border-left: 4px solid var(--danger);
+  background-color: var(--danger-light);
+  color: var(--danger);
 }
 
 .info {
-  border-left: 4px solid var(--info);
+  background-color: var(--info-light);
+  color: var(--info);
 }
 
 .icon {
@@ -58,18 +61,7 @@
   width: 20px;
   height: 20px;
   border: none;
-
-  &.success {
-    color: var(--success);
-  }
-
-  &.error {
-    color: var(--danger);
-  }
-
-  &.info {
-    color: var(--info);
-  }
+  color: currentColor;
 }
 
 .content {
@@ -79,26 +71,27 @@
 
 .message {
   margin: 0;
+  color: currentColor;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--gray-900);
 }
 
 .closeButton {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: var(--space-2);
-  cursor: pointer;
-  color: var(--gray-500);
-  width: 20px;
-  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin-left: var(--space-2);
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0.75;
 
   &:hover {
-    color: var(--gray-700);
+    opacity: 1;
   }
 
   &:focus-visible {

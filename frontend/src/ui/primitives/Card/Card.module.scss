@@ -1,11 +1,15 @@
 .card {
   position: relative;
-  border-radius: var(--radius);
-  background-color: var(--card);
+
+  display: block;
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   overflow: hidden;
+
+  background: var(--card);
 }
 
-/* Elevation variants */
 .elevation0 {
   box-shadow: none;
 }
@@ -15,10 +19,9 @@
 }
 
 .elevation2 {
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-md);
 }
 
-/* Padding variants */
 .paddingSm {
   padding: var(--space-3);
 }

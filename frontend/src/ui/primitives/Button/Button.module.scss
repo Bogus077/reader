@@ -4,8 +4,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border-radius: var(--radius);
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
+
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -15,29 +17,51 @@
   text-align: center;
   white-space: nowrap;
   outline: none;
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     pointer-events: none;
   }
-  
+
   &:focus-visible {
     box-shadow: 0 0 0 3px var(--primary-light);
   }
 }
 
-/* Варианты */
 .primary {
   color: #fff;
   background-color: var(--primary);
-  
+  border-color: var(--primary);
+
   &:hover:not(:disabled) {
     background-color: var(--primary-dark);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+}
+
+.success {
+  color: #fff;
+  background-color: var(--success);
+  border-color: var(--success);
+
+  &:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--success) 90%, black);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--success-light);
   }
 }
 
@@ -45,43 +69,69 @@
   color: var(--primary);
   background-color: transparent;
   border-color: var(--primary);
-  
+
   &:hover:not(:disabled) {
     background-color: var(--primary-light);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+}
+
+.secondary {
+  color: var(--gray-800);
+  background-color: var(--gray-100);
+  border-color: var(--gray-300);
+
+  &:hover:not(:disabled) {
+    background-color: var(--gray-200);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--gray-200);
   }
 }
 
 .danger {
   color: #fff;
   background-color: var(--danger);
-  
+  border-color: var(--danger);
+
   &:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--danger) 90%, black);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--danger-light);
   }
 }
 
 .subtle {
   color: var(--gray-700);
   background-color: var(--gray-100);
-  
+
   &:hover:not(:disabled) {
     background-color: var(--gray-200);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(1px);
   }
 }
 
-/* Размеры */
 .sm {
   padding: var(--space-1) var(--space-3);
   font-size: 0.875rem;
@@ -97,10 +147,9 @@
   font-size: 1.125rem;
 }
 
-/* Состояние загрузки */
 .loading {
   color: transparent !important;
-  
+
   .spinner {
     position: absolute;
     top: 50%;
@@ -110,19 +159,30 @@
   }
 }
 
-/* Полная ширина */
+.primary.loading .spinner {
+  color: #fff;
+}
+.success.loading .spinner {
+  color: #fff;
+}
+.secondary.loading .spinner {
+  color: var(--gray-700);
+}
+.danger.loading .spinner {
+  color: #fff;
+}
+
 .fullWidth {
   width: 100%;
 }
 
-/* Иконки */
-.leftIcon, .rightIcon {
+.leftIcon,
+.rightIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Стили для IconButton */
 .iconButton {
   padding: 0;
   aspect-ratio: 1 / 1;

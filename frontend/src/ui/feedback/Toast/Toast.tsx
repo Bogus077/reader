@@ -34,7 +34,7 @@ export const Toast = ({
       case "success":
         return (
           <svg
-            className={clsx(styles.icon, styles.success)}
+            className={clsx(styles.icon)}
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +51,7 @@ export const Toast = ({
       case "error":
         return (
           <svg
-            className={clsx(styles.icon, styles.error)}
+            className={clsx(styles.icon)}
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -68,7 +68,7 @@ export const Toast = ({
       case "info":
         return (
           <svg
-            className={clsx(styles.icon, styles.info)}
+            className={clsx(styles.icon)}
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"

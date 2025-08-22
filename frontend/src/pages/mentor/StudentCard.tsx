@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { Topbar } from '../../ui/primitives/Topbar';
+import { Tabbar } from '../../ui';
 import { useParams } from 'react-router-dom';
 import { useUnit } from 'effector-react';
 import { 
@@ -11,7 +12,7 @@ import {
   $studentStats, 
   loadMentorStudentCardFx 
 } from '../../store/mentor';
-import { Card, Badge, Button, DayStrips, RatingStars, Toast } from '../../ui';
+import { Card, Badge, Button, DayStrips, RatingStars, Toast, Loader } from '../../ui';
 import { GradeModal } from '../../ui/composite/GradeModal/GradeModal';
 import { AssignmentEditModal, AssignmentData } from '../../ui/composite/AssignmentEditModal/AssignmentEditModal';
 import { AssignBookModal, AssignBookData } from '../../ui/composite/AssignBookModal';
@@ -41,6 +42,7 @@ export const MentorStudentCard: FC = () => {
     $studentStats
   ]);
   const load = useUnit(loadMentorStudentCardFx);
+  const isPageLoading = useUnit(loadMentorStudentCardFx.pending);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   
   // Состояния для модальных окон
@@ -296,6 +298,9 @@ export const MentorStudentCard: FC = () => {
   return (
     <div>
       <Topbar title={studentData ? `${studentData.name}` : 'Карточка ученика'} />
+      {(isPageLoading || isLoading) && (
+        <Loader fullscreen message="Загрузка данных…" />
+      )}
       <div className={styles.container}>
         {studentData ? (
           <div className={styles.grid}>
@@ -379,7 +384,7 @@ export const MentorStudentCard: FC = () => {
                 <h3 className={styles.sectionTitle}>Быстрые действия</h3>
                 <div className={styles.actions}>
                   <Button 
-                    variant="primary" 
+                    variant="success" 
                     disabled={!getAssignmentForSelectedDay() || !canGradeAssignment(getAssignmentForSelectedDay())}
                     title={!canGradeAssignment(getAssignmentForSelectedDay()) ? 'Задание не готово к оценке' : ''}
                     onClick={handleOpenGradeModal}
@@ -387,7 +392,7 @@ export const MentorStudentCard: FC = () => {
                     Оценить
                   </Button>
                   <Button 
-                    variant="ghost" 
+                    variant="secondary" 
                     disabled={!getAssignmentForSelectedDay() || !canEditAssignment(getAssignmentForSelectedDay())}
                     title={!canEditAssignment(getAssignmentForSelectedDay()) ? 'Задание нельзя редактировать' : ''}
                     onClick={handleOpenEditModal}
@@ -409,7 +414,7 @@ export const MentorStudentCard: FC = () => {
                     Назначить книгу
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     onClick={handleGeneratePlanClick}
                     disabled={!activeBook}
                     title={!activeBook ? "Сначала назначьте книгу" : ""}
@@ -525,6 +530,7 @@ export const MentorStudentCard: FC = () => {
       {toastMessage && (
         <Toast id={`toast-${Date.now()}`} message={toastMessage} type="success" onClose={() => setToastMessage(null)} />
       )}
+      <Tabbar type="mentor" />
     </div>
   );
 };

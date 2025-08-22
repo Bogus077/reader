@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Badge, ProgressBar, Button, Input } from '../../ui';
+import { Card, Badge, ProgressBar, Button, Input, Tabbar } from '../../ui';
 import { useUnit } from 'effector-react';
 import { $mentorStudents, loadMentorStudentsFx } from '../../store/mentor';
 import { Link } from 'react-router-dom';
@@ -18,7 +18,8 @@ export default function MentorDashboard() {
   );
 
   return (
-    <div className="container">
+    <div>
+      <div className="container">
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ marginBottom: '16px' }}>Дашборд</h2>
         <div style={{ position: 'relative', maxWidth: '100%' }}>
@@ -90,6 +91,8 @@ export default function MentorDashboard() {
           </div>
         </div>
       )}
+      </div>
+      <Tabbar type="mentor" />
     </div>
   );
 }
