@@ -16,7 +16,7 @@ Assignment.belongsTo(StudentBook, { foreignKey: 'student_book_id' });
 
 // Связь Assignment и Recap (1:1)
 Assignment.hasOne(Recap, { foreignKey: 'assignment_id' });
-Recap.belongsTo(Assignment, { foreignKey: 'assignment_id' });
+Recap.belongsTo(Assignment, { foreignKey: 'assignment_id', as: 'assignment' });
 
 // Связь User и Streak (1:1, опциональная)
 User.hasOne(Streak, { foreignKey: 'student_id' });
