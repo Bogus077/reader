@@ -20,6 +20,7 @@ import {
   loadProgressFx,
   submitFx,
 } from "../../store/student";
+import { $user } from "../../store/auth";
 import { useNavigate } from "react-router-dom";
 import { resolveVisualStatus, mapAssignmentToDayStripStatus } from "../../lib/visualStatus";
 import { Strip } from "../../api/types";
@@ -32,6 +33,7 @@ export default function StudentToday() {
   const loadProgress = useUnit(loadProgressFx);
   const submit = useUnit(submitFx);
   const navigate = useNavigate();
+  const user = useUnit($user);
 
   useEffect(() => {
     load();
@@ -40,7 +42,7 @@ export default function StudentToday() {
   }, []);
 
   // Часовой пояс пользователя
-  const tz = "+03:00";
+  const tz = user?.tz || "Europe/Samara";
 
   // Преобразуем данные для компонента DayStrips с использованием единой логики
   const stripsData = strips?.map((strip: Strip) => {

@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Получаем ID ментора из первого сида
     const [mentors] = await queryInterface.sequelize.query(
-      `SELECT id FROM users WHERE role = 'mentor' AND telegram_id = '1000' LIMIT 1`
+      `SELECT id FROM users WHERE role = 'mentor' AND telegram_id = '382388583' LIMIT 1`
     );
 
     const mentorId = mentors.length > 0 ? mentors[0].id : null;

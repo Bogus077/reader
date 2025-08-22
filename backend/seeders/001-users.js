@@ -3,8 +3,13 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Сначала очищаем таблицу, чтобы избежать конфликтов
+    await queryInterface.bulkDelete("users", null, {});
+
+    // Вставляем записи с фиксированными id, чтобы совпадали с мок-токенами
     await queryInterface.bulkInsert("users", [
       {
+        id: 3,
         telegram_id: "382388583",
         role: "mentor",
         name: "Владислав Андреевич",
@@ -13,6 +18,7 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
+        id: 4,
         telegram_id: "7797299499",
         role: "student",
         name: "Ирина",
@@ -24,8 +30,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete("users", {
-      telegram_id: ["382388583", "7797299499"],
-    });
+    await queryInterface.bulkDelete("users", null, {});
   },
 };

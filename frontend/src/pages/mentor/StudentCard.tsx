@@ -95,8 +95,8 @@ export const MentorStudentCard: FC = () => {
     try {
       setIsLoading(true);
       // Определяем дату для задания
-      const targetDate = selectedDay || todayAssignment?.date || new Date().toISOString().slice(0, 10);
-      const createMode: 'percent'|'page' = (activeBook.mode === 'percent' || activeBook.mode === 'page') ? activeBook.mode : 'page';
+      const targetDate = data.date || selectedDay || todayAssignment?.assignment?.date || new Date().toISOString().slice(0, 10);
+      const createMode: 'percent'|'page' = (data.mode as ('percent'|'page') | undefined) || ((activeBook.mode === 'percent' || activeBook.mode === 'page') ? activeBook.mode : 'page');
       const payload = {
         student_book_id: activeBook.student_book_id,
         date: targetDate,
@@ -150,9 +150,8 @@ export const MentorStudentCard: FC = () => {
   // Проверка, можно ли редактировать задание
   const canEditAssignment = (assignment: Assignment | null) => {
     if (!assignment) return false;
-    // Проверяем, что статус задания только pending или submitted
-    const deadline = `${assignment.date}T${assignment.deadline_time}`;
-    return ['pending', 'submitted'].includes(assignment.status) && new Date(deadline) > new Date();
+    // Разрешаем редактирование для всех, кроме оценённых
+    return assignment.status !== 'graded';
   };
 
   // Проверка, можно ли оценить задание
@@ -167,7 +166,7 @@ export const MentorStudentCard: FC = () => {
       const assignment = strips.find((strip: Strip) => strip.date === selectedDay)?.assignment;
       return assignment || null;
     }
-    return todayAssignment;
+    return todayAssignment?.assignment || null;
   };
   
   // Обработчик открытия модального окна оценки
@@ -310,9 +309,9 @@ export const MentorStudentCard: FC = () => {
   // Обработчик сохранения отредактированного задания
   const handleEditSubmit = async (data: AssignmentData) => {
     if (selectedAssignment && id) {
-      // Проверяем, что статус задания позволяет редактирование
-      if (!['pending', 'submitted'].includes(selectedAssignment.status)) {
-        setToastMessage('Нельзя редактировать задание с текущим статусом');
+      // Блокируем только для оценённых заданий
+      if (selectedAssignment.status === 'graded') {
+        setToastMessage('Нельзя редактировать оценённое задание');
         return;
       }
       
@@ -380,41 +379,44 @@ export const MentorStudentCard: FC = () => {
               {/* Задание на сегодня */}
               <Card className={styles.card}>
                 <h3 className={styles.sectionTitle}>Задание на сегодня</h3>
-                {todayAssignment ? (
+                {(() => {
+                  const today = todayAssignment?.assignment || null;
+                  return today ? (
                   <>
                     <div className={styles.infoRow}>
                       <div className={styles.label}>Цель:</div>
                       <div className={styles.value}>
-                        {todayAssignment.target_percent ? `${todayAssignment.target_percent}%` : ''}
-                        {todayAssignment.target_pages ? `${todayAssignment.target_pages} стр.` : ''}
-                        {todayAssignment.target_chapter ? `Глава ${todayAssignment.target_chapter}` : ''}
+                        {today.target?.percent != null && today.target.percent > 0 && `${today.target.percent}%`}
+                        {today.target?.page != null && today.target.page > 0 && `${today.target.page} стр.`}
+                        {today.target?.chapter && `\u00A0•\u00A0Глава ${today.target.chapter}`}
                       </div>
                     </div>
                     <div className={styles.infoRow}>
                       <div className={styles.label}>Дедлайн:</div>
                       <div className={styles.value}>
                         <Calendar size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                        {formatDate(todayAssignment.deadline)}
+                        {formatDate(today.date)} {'\u00A0•\u00A0'} {today.deadline_time}
                       </div>
                     </div>
                     <div className={styles.infoRow}>
                       <div className={styles.label}>Статус:</div>
                       <div className={styles.value}>
-                        <Badge tone={getAssignmentStatus(todayAssignment.status).tone}>
-                          {getAssignmentStatus(todayAssignment.status).text}
+                        <Badge tone={getAssignmentStatus(today.status).tone}>
+                          {getAssignmentStatus(today.status).text}
                         </Badge>
                       </div>
                     </div>
-                    {todayAssignment.description && (
+                    {today.description && (
                       <div className={styles.infoRow}>
                         <div className={styles.label}>Описание:</div>
-                        <div className={styles.value}>{todayAssignment.description}</div>
+                        <div className={styles.value}>{today.description}</div>
                       </div>
                     )}
                   </>
-                ) : (
-                  <div>Нет активного задания на сегодня</div>
-                )}
+                  ) : (
+                    <div>Нет активного задания на сегодня</div>
+                  );
+                })()}
               </Card>
             </div>
 
@@ -537,22 +539,21 @@ export const MentorStudentCard: FC = () => {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           initialData={{
-            title: selectedAssignment.title || '',
             pages: selectedAssignment.target?.page || 0,
             percent: selectedAssignment.target?.percent ?? null,
             time: selectedAssignment.deadline_time || '12:00',
-            description: selectedAssignment.description || '',
             chapter: selectedAssignment.target?.chapter ? Number(selectedAssignment.target.chapter) : null,
             lastParagraph: selectedAssignment.target?.last_paragraph || ''
           }}
           onSubmit={handleEditSubmit}
           // Режим редактирования определяем из самого задания
           mode={(selectedAssignment.target?.percent ?? null) !== null ? 'percent' : 'page'}
+          isEdit
           isGraded={selectedAssignment.status === 'graded'}
           isDeadlinePassed={new Date(`${selectedAssignment.date}T${selectedAssignment.deadline_time}`) < new Date()}
-          disabled={!['pending', 'submitted'].includes(selectedAssignment.status)}
-          disabledReason={!['pending', 'submitted'].includes(selectedAssignment.status) ? 
-            'Нельзя редактировать задание со статусом "Оценено" или "Пропущено"' : ''}
+          disabled={selectedAssignment.status === 'graded'}
+          disabledReason={selectedAssignment.status === 'graded' ? 
+            'Нельзя редактировать оценённое задание' : ''}
         />
       )}
 
@@ -562,16 +563,18 @@ export const MentorStudentCard: FC = () => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           initialData={{
-            title: '',
             pages: 0,
             time: '20:00',
-            description: '',
             chapter: null,
-            lastParagraph: ''
+            lastParagraph: '',
+            date: selectedDay || new Date().toISOString().slice(0, 10),
+            mode: (activeBook.mode === 'percent' || activeBook.mode === 'page') ? activeBook.mode : 'page'
           }}
           onSubmit={handleCreateSubmit}
           // Передаём режим из активной книги, чтобы ввод переключался между страницами и процентами
           mode={activeBook.mode || 'page'}
+          showDate
+          allowModeSwitch
           isGraded={false}
           isDeadlinePassed={false}
           disabled={false}

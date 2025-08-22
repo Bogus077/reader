@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Получаем ID студента из первого сида
     const [students] = await queryInterface.sequelize.query(
-      `SELECT id FROM users WHERE role = 'student' AND telegram_id = '2000' LIMIT 1`
+      `SELECT id FROM users WHERE role = 'student' AND telegram_id = '7797299499' LIMIT 1`
     );
     
     // Получаем ID одной из книг
