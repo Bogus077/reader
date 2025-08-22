@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Badge } from "../../feedback/Badge/Badge";
 import { ProgressBar } from "../../data/ProgressBar/ProgressBar";
@@ -32,7 +32,7 @@ export type BookCardProps = {
   /**
    * Статус книги для отображения бейджа
    */
-  status?: 'in_progress' | 'finished';
+  status?: "in_progress" | "finished";
   /**
    * Описание книги (опционально)
    */
@@ -70,13 +70,41 @@ export const BookCard: FC<BookCardProps> = ({
   className,
   onClick,
 }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [canToggle, setCanToggle] = useState(false);
+  const descRef = useRef<HTMLParagraphElement | null>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // Запуск пересчёта после рендера
+    const raf = requestAnimationFrame(() => {
+      try {
+        const needsToggle = el.scrollHeight > el.clientHeight + 1;
+        setCanToggle(needsToggle);
+      } catch {}
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [description, compact]);
+
+  useEffect(() => {
+    const onResize = () => {
+      const el = descRef.current;
+      if (!el) return;
+      const needsToggle = el.scrollHeight > el.clientHeight + 1;
+      setCanToggle(needsToggle);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // Нормализуем сложность в диапазоне от 1 до 5
   const normalizedDifficulty = Math.max(1, Math.min(5, Math.round(difficulty)));
-  
+
   // Генерируем точки сложности
   const difficultyDots = Array.from({ length: 5 }).map((_, index) => (
-    <span 
-      key={index} 
+    <span
+      key={index}
       className={clsx(
         styles.difficultyDot,
         index < normalizedDifficulty && styles.active
@@ -85,7 +113,7 @@ export const BookCard: FC<BookCardProps> = ({
   ));
 
   return (
-    <div 
+    <div
       className={clsx(
         styles.card,
         compact && styles.compact,
@@ -98,58 +126,100 @@ export const BookCard: FC<BookCardProps> = ({
     >
       <div className={styles.coverWrapper}>
         {status && (
-          <div className={styles.statusBadge} aria-label={status === 'finished' ? 'Прочитано' : 'В процессе'}>
-            <Badge tone={status === 'finished' ? 'success' : 'warning'}>
-              {status === 'finished' ? 'Прочитано' : 'В процессе'}
+          <div
+            className={styles.statusBadge}
+            aria-label={status === "finished" ? "Прочитано" : "В процессе"}
+          >
+            <Badge tone={status === "finished" ? "success" : "warning"}>
+              {status === "finished" ? "Прочитано" : "В процессе"}
             </Badge>
           </div>
         )}
-        <img 
-          src={coverUrl} 
-          alt={`Обложка книги "${title}"`} 
+        <img
+          src={coverUrl}
+          alt={`Обложка книги "${title}"`}
           className={styles.cover}
         />
       </div>
-      
+
       <div className={styles.content}>
         <h3 className={styles.title} title={title}>
           {title}
         </h3>
-        
+
         <div className={styles.author}>{author}</div>
-        
+
         <div className={styles.meta}>
           <Badge tone="info" className={styles.category}>
             {category}
           </Badge>
-          
-          <div className={styles.difficulty} title={`Сложность: ${normalizedDifficulty} из 5`}>
+
+          <div
+            className={styles.difficulty}
+            title={`Сложность: ${normalizedDifficulty} из 5`}
+          >
             {difficultyDots}
           </div>
         </div>
         {description && (
-          <p className={styles.description} title={description}>
-            {description}
-          </p>
+          <>
+            <p
+              ref={descRef}
+              className={clsx(
+                styles.description,
+                expanded
+                  ? styles.descriptionExpanded
+                  : styles.descriptionCollapsed
+              )}
+              title={description}
+            >
+              {description}
+            </p>
+            {(canToggle || expanded) && (
+              <button
+                type="button"
+                className={styles.readMore}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded((v) => !v);
+                }}
+                aria-expanded={expanded}
+                aria-label={
+                  expanded ? "Свернуть описание" : "Развернуть описание"
+                }
+              >
+                {expanded ? "Свернуть" : "Развернуть описание"}
+              </button>
+            )}
+          </>
         )}
-        {sourceUrl && (
-          <a
-            className={styles.sourceLink}
-            href={sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Открыть источник «${title}» в новой вкладке`}
-          >
-            Источник
-          </a>
-        )}
-        
+        {sourceUrl &&
+          (() => {
+            let domain = "";
+            try {
+              const u = new URL(sourceUrl);
+              domain = u.hostname.replace(/^www\./, "");
+            } catch {}
+            const label = domain ? `Читать на ${domain}` : "Читать источник";
+            return (
+              <a
+                className={styles.sourceButton}
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Открыть источник «${title}» на ${
+                  domain || "внешнем сайте"
+                } в новой вкладке`}
+                title={label}
+              >
+                {label}
+              </a>
+            );
+          })()}
+
         {progress !== undefined && (
           <div className={styles.progressWrapper}>
-            <ProgressBar 
-              value={progress} 
-              className={styles.progress}
-            />
+            <ProgressBar value={progress} className={styles.progress} />
           </div>
         )}
       </div>

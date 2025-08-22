@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Link } from "react-router-dom";
+import { HashRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import "./styles/globals.scss";
 import StudentToday from "./pages/student/Today";
 import StudentProgress from "./pages/student/Progress";
@@ -13,8 +13,20 @@ import UIData from "./pages/ui-demo/Data";
 import UIFeedback from "./pages/ui-demo/Feedback";
 import { useEffect } from "react";
 import { useUnit } from "effector-react";
-import { authFx } from "./store/auth";
+import { authFx, $user } from "./store/auth";
 import { isTelegramEnv } from "./lib/telegram";
+
+function RootRoute() {
+  const user = useUnit($user);
+  if (user?.role === "mentor") return <Navigate to="/mentor" replace />;
+  return <StudentToday />;
+}
+
+function FallbackRedirect() {
+  const user = useUnit($user);
+  const target = user?.role === "mentor" ? "/mentor" : "/";
+  return <Navigate to={target} replace />;
+}
 
 export default function App() {
   const auth = useUnit(authFx);
@@ -57,8 +69,8 @@ export default function App() {
       </nav> */}
 
       <Routes>
-        {/* Студенческие маршруты */}
-        <Route path="/" element={<StudentToday />} />
+        {/* Стартовая точка: редирект по роли */}
+        <Route path="/" element={<RootRoute />} />
         <Route path="/progress" element={<StudentProgress />} />
         <Route path="/library" element={<StudentLibrary />} />
         <Route path="/history" element={<DayHistory />} />
@@ -73,6 +85,9 @@ export default function App() {
         <Route path="/ui/primitives" element={<UIPrimitives />} />
         <Route path="/ui/data" element={<UIData />} />
         <Route path="/ui/feedback" element={<UIFeedback />} />
+
+        {/* Неизвестные маршруты: редирект по роли */}
+        <Route path="*" element={<FallbackRedirect />} />
       </Routes>
     </HashRouter>
   );

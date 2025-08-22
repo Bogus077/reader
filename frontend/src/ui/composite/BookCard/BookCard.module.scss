@@ -9,12 +9,12 @@
 
 .clickable {
   cursor: pointer;
-  
+
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
   }
-  
+
   &:focus {
     outline: 2px solid rgba(74, 108, 247, 0.5);
     outline-offset: 2px;
@@ -34,7 +34,7 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
-  
+
   .clickable:hover & {
     transform: scale(1.05);
   }
@@ -92,16 +92,47 @@
 }
 
 .description {
-  display: -webkit-box;
   overflow: hidden;
   margin-top: 8px;
   color: #444;
   font-size: 14px;
   line-height: 1.4;
+  text-overflow: ellipsis;
+  transition: max-height 0.25s ease;
+  margin-bottom: 0px;
+}
+
+.descriptionCollapsed {
+  display: -webkit-box;
+  max-height: calc(1.4em * 3);
+  -webkit-box-orient: vertical;
   line-clamp: 3;
   -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
+}
+
+.descriptionExpanded {
+  display: block;
+  max-height: 1000px;
+}
+
+.noClamp {
+  display: block;
+  -webkit-box-orient: initial;
+  line-clamp: unset;
+  -webkit-line-clamp: unset;
+}
+
+.readMore {
+  display: inline-block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #4a6cf7;
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: underline;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .sourceLink {
@@ -114,12 +145,39 @@
   text-decoration: none;
 }
 
+.sourceButton {
+  display: inline-block;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #4a6cf7;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #3b5cf0;
+  }
+
+  &:focus {
+    outline: 2px solid rgba(74, 108, 247, 0.5);
+    outline-offset: 2px;
+  }
+}
+
 .difficultyDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background-color: #e0e0e0;
-  
+
   &.active {
     background-color: #f39c12;
   }
@@ -143,34 +201,32 @@
 .compact {
   flex-direction: column;
   width: 100%;
-  
+
   .coverWrapper {
     width: 100%;
     aspect-ratio: 2 / 3;
     height: auto;
   }
-  
+
   .content {
     height: auto;
   }
-  
+
   .title {
     font-size: 16px;
   }
-  
+
   .author {
     font-size: 13px;
   }
-  
+
   .meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .action {
     justify-content: center;
   }
 }
-
- 

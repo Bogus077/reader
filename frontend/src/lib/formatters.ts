@@ -13,7 +13,7 @@ export const formatTime = (time: string): string => {
  * @returns Строка вида "1ч 25м" или "5м"
  */
 export const formatRemainingTime = (milliseconds: number): string => {
-  if (milliseconds <= 0) {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
     return '';
   }
   
