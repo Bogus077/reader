@@ -222,11 +222,13 @@ router.get('/students', requireAuth, requireMentor, async (req, res) => {
       const lastRecap = await Recap.findOne({
         include: [{
           model: Assignment,
+          as: 'assignment',
           where: {
             status: 'graded'
           },
           include: [{
             model: StudentBook,
+            as: 'studentBook',
             where: {
               student_id: student.id
             }
@@ -356,6 +358,7 @@ router.get('/students/:id', requireAuth, requireMentor, async (req, res) => {
         },
         include: [{
           model: StudentBook,
+          as: 'studentBook',
           where: {
             student_id: studentId
           }

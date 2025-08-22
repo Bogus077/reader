@@ -11,8 +11,8 @@ StudentBook.belongsTo(User, { foreignKey: 'student_id' });
 Book.hasMany(StudentBook, { foreignKey: 'book_id' });
 StudentBook.belongsTo(Book, { foreignKey: 'book_id' });
 
-StudentBook.hasMany(Assignment, { foreignKey: 'student_book_id' });
-Assignment.belongsTo(StudentBook, { foreignKey: 'student_book_id' });
+StudentBook.hasMany(Assignment, { foreignKey: 'student_book_id', as: 'assignment' });
+Assignment.belongsTo(StudentBook, { foreignKey: 'student_book_id', as: 'studentBook' });
 
 // Связь Assignment и Recap (1:1)
 Assignment.hasOne(Recap, { foreignKey: 'assignment_id', as: 'recap' });
