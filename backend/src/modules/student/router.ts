@@ -98,6 +98,57 @@ router.get('/current-book', async (req, res) => {
 });
 
 /**
+ * GET /student/assignment/by-date?date=YYYY-MM-DD
+ * Получить полные данные задания по дате (включая recap)
+ */
+router.get('/assignment/by-date', async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const date = String(req.query.date || '').slice(0, 10);
+
+    if (!date) {
+      return res.status(400).json({ ok: false, error: 'date query param is required (YYYY-MM-DD)' });
+    }
+
+    const studentBook = await getActiveStudentBook(studentId);
+    if (!studentBook) {
+      return res.json({ ok: true, assignment: null });
+    }
+
+    const assignment = await Assignment.findOne({
+      where: { student_book_id: studentBook.id, date },
+      include: [{ model: Recap, as: 'recap', required: false }]
+    });
+
+    if (!assignment) {
+      return res.json({ ok: true, assignment: null });
+    }
+
+    return res.json({
+      ok: true,
+      assignment: {
+        id: assignment.id,
+        date: assignment.date,
+        deadline_time: assignment.deadline_time,
+        status: (assignment as any).status,
+        target: {
+          percent: (assignment as any).target_percent,
+          page: (assignment as any).target_page,
+          chapter: (assignment as any).target_chapter,
+          last_paragraph: (assignment as any).target_last_paragraph
+        },
+        submitted_at: (assignment as any).submitted_at ?? null,
+        mentor_rating: (assignment as any).recap?.mentor_rating ?? null,
+        mentor_comment: (assignment as any).recap?.mentor_comment ?? null
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching assignment by date:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
  * GET /student/assignment/today
  * Получить задание на сегодня или ближайшее будущее
  */
@@ -126,20 +177,23 @@ router.get('/assignment/today', async (req, res) => {
       });
     }
     
-    // Форматируем ответ
+    // Форматируем ответ, включая recap (оценка и комментарий)
     return res.json({
       ok: true,
       assignment: {
         id: assignment.id,
         date: assignment.date,
         deadline_time: assignment.deadline_time,
-        status: assignment.status,
+        status: (assignment as any).status,
         target: {
-          percent: assignment.target_percent,
-          page: assignment.target_page,
-          chapter: assignment.target_chapter,
-          last_paragraph: assignment.target_last_paragraph
-        }
+          percent: (assignment as any).target_percent,
+          page: (assignment as any).target_page,
+          chapter: (assignment as any).target_chapter,
+          last_paragraph: (assignment as any).target_last_paragraph
+        },
+        submitted_at: (assignment as any).submitted_at ?? null,
+        mentor_rating: (assignment as any).recap?.mentor_rating ?? null,
+        mentor_comment: (assignment as any).recap?.mentor_comment ?? null
       }
     });
   } catch (error) {

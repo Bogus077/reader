@@ -18,9 +18,11 @@ import {
   $today,
   $strips,
   $progress,
+  $assignmentByDate,
   loadTodayFx,
   loadStripsFx,
   loadProgressFx,
+  loadAssignmentByDateFx,
   submitFx,
 } from "../../store/student";
 import { $user } from "../../store/auth";
@@ -34,6 +36,7 @@ import { BookOpen, ClipboardList, Clock, CheckCircle2 } from "lucide-react";
 
 export default function StudentToday() {
   const [today, strips, progress] = useUnit([$today, $strips, $progress]);
+  const assignmentByDate = useUnit($assignmentByDate);
   const load = useUnit(loadTodayFx);
   const loadStrips = useUnit(loadStripsFx);
   const loadProgress = useUnit(loadProgressFx);
@@ -41,6 +44,7 @@ export default function StudentToday() {
   const isTodayLoading = useUnit(loadTodayFx.pending);
   const isStripsLoading = useUnit(loadStripsFx.pending);
   const isProgressLoading = useUnit(loadProgressFx.pending);
+  const loadAssignmentByDate = useUnit(loadAssignmentByDateFx);
   const navigate = useNavigate();
   const user = useUnit($user);
 
@@ -49,6 +53,17 @@ export default function StudentToday() {
     loadStrips();
     loadProgress();
   }, []);
+
+  // Догружаем полные данные задания по дате, если нет оценки/комментария
+  useEffect(() => {
+    if (
+      today?.date &&
+      today.status === "graded" &&
+      (today.mentor_rating == null || !today.mentor_comment)
+    ) {
+      loadAssignmentByDate(today.date);
+    }
+  }, [today?.date, today?.status, today?.mentor_rating, today?.mentor_comment, loadAssignmentByDate]);
 
   // Часовой пояс пользователя
   const tz = user?.tz || "Europe/Samara";
@@ -153,6 +168,9 @@ export default function StudentToday() {
   // Визуальный статус сегодняшнего задания
   const visualStatus = today ? resolveVisualStatus(today, tz) : "pending";
 
+  // Если догрузили полные данные по этой же дате — используем их для отображения фидбека
+  const enrichedToday = assignmentByDate?.date === today?.date ? assignmentByDate : today;
+
   return (
     <>
       <Topbar title="Сегодня" />
@@ -228,34 +246,29 @@ export default function StudentToday() {
                 </div>
               )}
 
-              {today.status === "graded" && (
-                <>
-                  <div
-                    className="hstack"
-                    style={{ alignItems: "center", gap: 8, marginTop: 12 }}
-                  >
-                    <Badge tone="success" soft>
-                      Оценено
-                    </Badge>
-                    {today.mentor_rating != null &&
-                      !Number.isNaN(Number(today.mentor_rating)) && (
-                        <RatingStars
-                          value={Number(today.mentor_rating)}
-                          readOnly
-                          size="sm"
-                        />
-                      )}
-                  </div>
-                  {today.mentor_comment?.trim() && (
-                    <div style={{ marginTop: 8 }}>
-                      <InfoCallout
-                        title="Комментарий ментора"
-                        description={today.mentor_comment!.trim()}
-                        tone="info"
-                      />
-                    </div>
-                  )}
-                </>
+              {enrichedToday?.mentor_rating != null && !Number.isNaN(Number(enrichedToday.mentor_rating as any)) && (
+                <div
+                  className="hstack"
+                  style={{ alignItems: "center", gap: 8, marginTop: 12 }}
+                >
+                  <Badge tone="success" soft>
+                    {enrichedToday.status === "graded" ? "Оценено" : "Оценка"}
+                  </Badge>
+                  <RatingStars
+                    value={Number(enrichedToday.mentor_rating)}
+                    readOnly
+                    size="sm"
+                  />
+                </div>
+              )}
+              {enrichedToday?.mentor_comment?.trim() && (
+                <div style={{ marginTop: 8 }}>
+                  <InfoCallout
+                    title="Комментарий ментора"
+                    description={enrichedToday.mentor_comment!.trim()}
+                    tone="info"
+                  />
+                </div>
               )}
 
               {today.status === "submitted" && (

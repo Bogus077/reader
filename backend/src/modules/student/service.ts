@@ -78,7 +78,12 @@ export async function getTodayAssignment(studentBookId: number, tz: string) {
       where: {
         student_book_id: studentBookId,
         date: today
-      }
+      },
+      include: [{
+        model: Recap,
+        as: 'recap',
+        required: false
+      }]
     });
     
     // Если есть задание на сегодня, применяем визуальный статус
@@ -106,6 +111,11 @@ export async function getTodayAssignment(studentBookId: number, tz: string) {
             [Op.in]: ['pending', 'submitted']
           }
         },
+        include: [{
+          model: Recap,
+          as: 'recap',
+          required: false
+        }],
         order: [['date', 'ASC']]
       });
     }
