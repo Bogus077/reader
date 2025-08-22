@@ -13,7 +13,7 @@ import { sequelize } from '../../lib/db';
 import dayjs from 'dayjs';
 import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
-import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema } from './schemas';
+import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema } from './schemas';
 
 const router = express.Router();
 
@@ -711,6 +711,42 @@ router.patch('/student-books/:id/status', requireAuth, requireMentor, validateRe
       ok: false,
       error: 'Internal server error'
     });
+  }
+});
+
+/**
+ * Создание новой книги
+ * POST /mentor/books
+ */
+router.post('/books', requireAuth, requireMentor, validateRequest(createBookSchema), async (req, res) => {
+  try {
+    const {
+      title,
+      author,
+      category,
+      difficulty,
+      description = null,
+      cover_url = null,
+      source_url = null,
+    } = req.body;
+
+    const userId = req.user?.id ?? null;
+
+    const book = await Book.create({
+      title,
+      author,
+      category,
+      difficulty,
+      description,
+      cover_url,
+      source_url,
+      created_by: userId,
+    });
+
+    return res.status(201).json({ ok: true, book });
+  } catch (error) {
+    console.error('Error creating book:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });
 

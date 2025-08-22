@@ -81,3 +81,17 @@ export const updateBookStatusSchema = z.object({
       .describe("Дата в формате YYYY-MM-DD (опционально)")
   })
 });
+
+// Схема для POST /mentor/books
+export const createBookSchema = z.object({
+  body: z.object({
+    title: z.string().min(1, 'Название обязательно'),
+    author: z.string().min(1, 'Автор обязателен'),
+    category: z.string().min(1, 'Категория обязательна'),
+    difficulty: z.number().int().min(1).max(5)
+      .describe('Сложность от 1 до 5'),
+    description: z.string().nullable().optional(),
+    cover_url: z.string().url().nullable().optional(),
+    source_url: z.string().url().nullable().optional(),
+  })
+});

@@ -1,4 +1,4 @@
-import { Model, DataTypes } from 'sequelize';
+import { Model, DataTypes, Optional } from 'sequelize';
 import sequelize from '../../lib/db';
 import User from '../users/model';
 
@@ -16,7 +16,9 @@ interface BookAttributes {
   updatedAt?: Date;
 }
 
-class Book extends Model<BookAttributes> implements BookAttributes {
+type BookCreationAttributes = Optional<BookAttributes, 'id' | 'description' | 'cover_url' | 'source_url' | 'created_by' | 'createdAt' | 'updatedAt'>;
+
+class Book extends Model<BookAttributes, BookCreationAttributes> implements BookAttributes {
   public id!: number;
   public title!: string;
   public author!: string;
