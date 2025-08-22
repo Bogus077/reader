@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import clsx from "clsx";
+import styles from "./Today.module.scss";
 import {
   Card,
   Button,
@@ -32,7 +34,7 @@ import {
   mapAssignmentToDayStripStatus,
 } from "../../lib/visualStatus";
 import { Strip } from "../../api/types";
-import { BookOpen, ClipboardList, Clock, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function StudentToday() {
   const [today, strips, progress] = useUnit([$today, $strips, $progress]);
@@ -63,7 +65,13 @@ export default function StudentToday() {
     ) {
       loadAssignmentByDate(today.date);
     }
-  }, [today?.date, today?.status, today?.mentor_rating, today?.mentor_comment, loadAssignmentByDate]);
+  }, [
+    today?.date,
+    today?.status,
+    today?.mentor_rating,
+    today?.mentor_comment,
+    loadAssignmentByDate,
+  ]);
 
   // Часовой пояс пользователя
   const tz = user?.tz || "Europe/Samara";
@@ -73,22 +81,28 @@ export default function StudentToday() {
     strips?.map((strip: Strip) => {
       // Нормализуем статус к одному из: 'done' | 'current' | 'future' | 'missed'
       const raw = (strip as any).status as string;
-      const isSupported = raw === 'done' || raw === 'current' || raw === 'future' || raw === 'missed';
+      const isSupported =
+        raw === "done" ||
+        raw === "current" ||
+        raw === "future" ||
+        raw === "missed";
       const fromBackend = isSupported
-        ? (raw as 'done'|'current'|'future'|'missed')
-        : raw === 'graded'
-        ? 'done'
-        : raw === 'submitted'
-        ? 'current'
-        : raw === 'pending'
-        ? 'future'
+        ? (raw as "done" | "current" | "future" | "missed")
+        : raw === "graded"
+        ? "done"
+        : raw === "submitted"
+        ? "current"
+        : raw === "pending"
+        ? "future"
         : undefined;
 
       const stripStatus = fromBackend
         ? fromBackend
         : strip.assignment
-        ? mapAssignmentToDayStripStatus(resolveVisualStatus(strip.assignment, tz))
-        : 'future';
+        ? mapAssignmentToDayStripStatus(
+            resolveVisualStatus(strip.assignment, tz)
+          )
+        : "future";
 
       const rating =
         strip.assignment?.mentor_rating !== null
@@ -169,16 +183,27 @@ export default function StudentToday() {
   const visualStatus = today ? resolveVisualStatus(today, tz) : "pending";
 
   // Если догрузили полные данные по этой же дате — используем их для отображения фидбека
-  const enrichedToday = assignmentByDate?.date === today?.date ? assignmentByDate : today;
+  const enrichedToday =
+    assignmentByDate?.date === today?.date ? assignmentByDate : today;
+
+  // Следующая дата по списку strips — как логика кнопки "След." на /history
+  const nextDate = (() => {
+    if (!today?.date || !strips?.length) return null;
+    const currentIndex = strips.findIndex((s: Strip) => s.date === today.date);
+    if (currentIndex === -1) return null;
+    return currentIndex < strips.length - 1
+      ? strips[currentIndex + 1].date
+      : null;
+  })();
 
   return (
     <>
       <Topbar title="Сегодня" />
 
       <div className="container">
-        <div style={{ marginBottom: 12 }}>
+        <div className={styles.mb12}>
           {isStripsLoading ? (
-            <div style={{ display: "grid", gap: 8 }}>
+            <div className={styles.skeletonGrid}>
               <Skeleton variant="rect" height={12} />
               <Skeleton variant="rect" height={12} />
               <Skeleton variant="rect" height={12} width="80%" />
@@ -188,21 +213,18 @@ export default function StudentToday() {
           )}
         </div>
 
-        <div style={{ height: 12 }} />
+        <div className={styles.h12} />
 
         <Card>
-          <div
-            className="hstack"
-            style={{ alignItems: "center", gap: 8, marginBottom: 12 }}
-          >
+          <div className={clsx("hstack", styles.cardHeader)}>
             <ClipboardList size={18} color="var(--gray-700)" />
-            <div style={{ fontWeight: 700 }}>Задание на сегодня</div>
+            <div className={styles.cardTitle}>Задание на сегодня</div>
           </div>
 
           {isTodayLoading ? (
             <div>
               <Skeleton variant="text" height={16} width="60%" />
-              <div style={{ height: 8 }} />
+              <div className={styles.h8} />
               <Skeleton variant="text" height={14} width="40%" />
             </div>
           ) : today ? (
@@ -227,15 +249,12 @@ export default function StudentToday() {
               />
 
               {visualStatus === "pending" && (
-                <div
-                  className="hstack"
-                  style={{ alignItems: "center", gap: 8, marginTop: 12 }}
-                >
+                <div className={clsx("hstack", styles.rowMt12)}>
                   <Clock size={16} color="var(--danger)" />
-                  <span style={{ color: "var(--danger)" }}>
+                  <span className={styles.danger}>
                     Сдать до {today.deadline_time}
                   </span>
-                  <div style={{ marginLeft: "auto" }}>
+                  <div className={styles.mlAuto}>
                     <DeadlineTimer
                       date={today.date}
                       time={today.deadline_time}
@@ -245,24 +264,21 @@ export default function StudentToday() {
                   </div>
                 </div>
               )}
-
-              {enrichedToday?.mentor_rating != null && !Number.isNaN(Number(enrichedToday.mentor_rating as any)) && (
-                <div
-                  className="hstack"
-                  style={{ alignItems: "center", gap: 8, marginTop: 12 }}
-                >
-                  <Badge tone="success" soft>
-                    {enrichedToday.status === "graded" ? "Оценено" : "Оценка"}
-                  </Badge>
-                  <RatingStars
-                    value={Number(enrichedToday.mentor_rating)}
-                    readOnly
-                    size="sm"
-                  />
-                </div>
-              )}
+              {enrichedToday?.mentor_rating != null &&
+                !Number.isNaN(Number(enrichedToday.mentor_rating as any)) && (
+                  <div className={clsx("hstack", styles.rowMt12)}>
+                    <Badge tone="success" soft>
+                      {enrichedToday.status === "graded" ? "Оценено" : "Оценка"}
+                    </Badge>
+                    <RatingStars
+                      value={Number(enrichedToday.mentor_rating)}
+                      readOnly
+                      size="sm"
+                    />
+                  </div>
+                )}
               {enrichedToday?.mentor_comment?.trim() && (
-                <div style={{ marginTop: 8 }}>
+                <div className={styles.mt8}>
                   <InfoCallout
                     title="Комментарий ментора"
                     description={enrichedToday.mentor_comment!.trim()}
@@ -272,22 +288,39 @@ export default function StudentToday() {
               )}
 
               {today.status === "submitted" && (
-                <div
-                  className="hstack"
-                  style={{ alignItems: "center", gap: 8, marginTop: 12 }}
-                >
+                <div className={clsx("hstack", styles.rowMt12)}>
                   <Badge tone="success" soft>
                     Сдано
                   </Badge>
                   {today.submitted_at && (
-                    <span style={{ color: "var(--gray-700)" }}>
+                    <span className={styles.grayText}>
                       Сдано: {today.submitted_at}
                     </span>
                   )}
                 </div>
               )}
 
-              <div style={{ height: 8 }} />
+              {(today.status === "submitted" || today.status === "graded") &&
+                nextDate && (
+                  <div
+                    className={clsx(
+                      "hstack",
+                      styles.rowMt12,
+                      styles.nextButton
+                    )}
+                  >
+                    <Button
+                      onClick={() => {
+                        navigate(`/history?date=${nextDate}`);
+                      }}
+                    >
+                      Посмотреть задание на завтра
+                      <ArrowRight size={16} />
+                    </Button>
+                  </div>
+                )}
+
+              <div className={styles.h8} />
 
               {visualStatus === "pending" && (
                 <Button
@@ -304,30 +337,25 @@ export default function StudentToday() {
                     }
                   }}
                 >
-                  <span
-                    className="hstack"
-                    style={{ alignItems: "center", gap: 8 }}
-                  >
+                  <span className={clsx("hstack", styles.row)}>
                     <CheckCircle2 size={18} /> Отметить как прочитано
                   </span>
                 </Button>
               )}
             </>
           ) : (
-            <div style={{ color: "var(--gray-700)" }}>
-              На сегодня заданий нет
-            </div>
+            <div className={styles.grayText}>На сегодня заданий нет</div>
           )}
         </Card>
 
         {isProgressLoading ? (
           <>
-            <div style={{ height: 12 }} />
+            <div className={styles.h12} />
             <Skeleton variant="rect" height={80} />
           </>
         ) : progress?.currentStreak ? (
           <>
-            <div style={{ height: 12 }} />
+            <div className={styles.h12} />
             <StreakCard days={progress.currentStreak} hint={streakHint!} />
           </>
         ) : null}

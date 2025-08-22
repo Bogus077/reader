@@ -330,10 +330,20 @@ router.get('/progress', async (req, res) => {
         bestStreak,
         avgRating: 0,
         daysDone: 0,
-        daysTotal: 0
+        daysTotal: 0,
+        bookTitle: null
       });
     }
     
+    // Достаем название книги
+    let bookTitle: string | null = null;
+    try {
+      const book = await Book.findByPk(studentBook.book_id);
+      bookTitle = book ? book.title : null;
+    } catch (e) {
+      bookTitle = null;
+    }
+
     // Подсчитываем прогресс
     const { total, graded } = await countAssignments(studentBook.id);
     
@@ -368,7 +378,8 @@ router.get('/progress', async (req, res) => {
       bestStreak,
       avgRating,
       daysDone: graded,
-      daysTotal: total
+      daysTotal: total,
+      bookTitle
     });
   } catch (error) {
     console.error('Error fetching student progress:', error);

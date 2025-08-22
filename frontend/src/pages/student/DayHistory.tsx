@@ -4,7 +4,8 @@ import { useUnit } from 'effector-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ArrowLeft, ArrowRight, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { Topbar, Tabbar, Card, Badge, Button, RatingStars } from '../../ui';
+import { Topbar, Tabbar, Card, Badge, Button, RatingStars, Skeleton } from '../../ui';
+import clsx from 'clsx';
 import { $strips, $assignmentByDate, loadStripsFx, loadAssignmentByDateFx } from '../../store/student';
 import { resolveVisualStatus, mapAssignmentToDayStripStatus, mapStatusToColor } from "../../lib/visualStatus";
 import { Assignment } from "../../api/types";
@@ -17,6 +18,36 @@ const formatDate = (dateString: string): string => {
     return format(date, 'd MMMM', { locale: ru });
   } catch (e) {
     return dateString;
+  }
+};
+
+// Текст статуса для инлайн-отображения
+const getStatusText = (assignment: Assignment, tz = '+03:00') => {
+  const visualStatus = resolveVisualStatus(assignment, tz);
+  switch (visualStatus) {
+    case 'submitted':
+      return 'Отмечено';
+    case 'graded':
+      return 'Проверено';
+    case 'missed':
+      return 'Пропущено';
+    default:
+      return 'Ожидает';
+  }
+};
+
+// CSS-класс цвета статуса
+const getStatusClass = (assignment: Assignment, tz = '+03:00') => {
+  const color = mapStatusToColor(resolveVisualStatus(assignment, tz));
+  switch (color) {
+    case 'green':
+      return styles.statusSuccess;
+    case 'blue':
+      return styles.statusInfo;
+    case 'red':
+      return styles.statusDanger;
+    default:
+      return styles.statusMuted;
   }
 };
 
@@ -47,29 +78,17 @@ const getStatusBadge = (assignment: Assignment, tz = '+03:00') => {
   }
 };
 
-// Функция для получения иконки статуса
+// Функция для получения иконки статуса (цвет наследуется от CSS currentColor)
 const getStatusIcon = (assignment: Assignment, tz = '+03:00') => {
   const visualStatus = resolveVisualStatus(assignment, tz);
-  const color = mapStatusToColor(visualStatus);
-  
-  // Цвета для иконок в зависимости от статуса
-  const colorMap: Record<string, string> = {
-    green: '#4CAF50',
-    blue: '#2196F3',
-    red: '#F44336',
-    grey: '#9E9E9E'
-  };
-  
-  const iconColor = colorMap[color] || colorMap.grey;
-  
   switch (visualStatus) {
     case 'submitted':
     case 'graded':
-      return <CheckCircle size={16} color={iconColor} />;
+      return <CheckCircle size={16} />;
     case 'missed':
-      return <XCircle size={16} color={iconColor} />;
+      return <XCircle size={16} />;
     default:
-      return <Clock size={16} color={iconColor} />;
+      return <Clock size={16} />;
   }
 };
 
@@ -80,6 +99,8 @@ export const DayHistory: FC = () => {
   
   const [strips, assignmentByDate] = useUnit([$strips, $assignmentByDate]);
   const [loadStrips, loadAssignmentByDate] = useUnit([loadStripsFx, loadAssignmentByDateFx]);
+  const isStripsLoading = useUnit(loadStripsFx.pending);
+  const isAssignmentLoading = useUnit(loadAssignmentByDateFx.pending);
   
   // Редирект на главную, если дата не указана или некорректна
   useEffect(() => {
@@ -139,16 +160,46 @@ export const DayHistory: FC = () => {
       <Topbar title="История чтения" />
       <div className={styles.container}>
         {/* Верхняя часть с датой и статусом */}
-        <div className={styles.header}>
-          <div className={styles.date}>{formatDate(date)}</div>
-          {currentStrip?.assignment && getStatusBadge(assignmentByDate || currentStrip.assignment)}
-        </div>
+        {isStripsLoading ? (
+          <div className={styles.header}>
+            <div className={styles.date}>
+              <Skeleton variant="text" height={20} width={120} />
+            </div>
+            <div>
+              <Skeleton variant="rect" height={20} width={80} />
+            </div>
+          </div>
+        ) : (
+          <div className={styles.header}>
+            <div className={styles.dateRow}>
+              <div className={styles.date}>{formatDate(date)}</div>
+              {(() => {
+                const a = (assignmentByDate || currentStrip?.assignment) as Assignment | undefined;
+                return (
+                  <div className={clsx(
+                    styles.statusInline,
+                    a ? getStatusClass(a) : styles.statusMuted
+                  )}>
+                    {a ? getStatusIcon(a) : <Clock size={16} />}
+                    <span>{a ? getStatusText(a) : 'Ожидает'}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
         
         {/* Карточка с заданием на день */}
         <Card className={styles.card}>
           <div className={styles.cardTitle}>Задание на день</div>
           
-          {assignmentByDate ? (
+          {isAssignmentLoading ? (
+            <div>
+              <Skeleton variant="text" height={16} width="60%" />
+              <div style={{ height: 8 }} />
+              <Skeleton variant="text" height={14} width="40%" />
+            </div>
+          ) : assignmentByDate ? (
             <>
               <div className={styles.infoRow}>
                 <div className={styles.label}>Цель:</div>

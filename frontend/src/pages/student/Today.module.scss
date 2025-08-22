@@ -1,0 +1,63 @@
+.mb12 {
+  margin-bottom: 12px;
+}
+
+.skeletonGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.cardHeader {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  font-weight: 700;
+}
+
+.row {
+  align-items: center;
+  gap: 8px;
+}
+
+.rowMt12 {
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.nextButton {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.grayText {
+  color: var(--gray-700);
+}
+
+.mlAuto {
+  margin-left: auto;
+}
+
+.mt8 {
+  margin-top: 8px;
+}
+
+.mt12 {
+  margin-top: 12px;
+}
+
+.h8 {
+  height: 8px;
+}
+
+.h12 {
+  height: 12px;
+}

@@ -19,6 +19,9 @@ export const StudentProgress: FC = () => {
 
   // Расчет процента выполнения
   const progressPercent = progress ? Math.round((progress.daysDone / progress.daysTotal) * 100) : 0;
+  
+  // Название активной книги теперь приходит с backend в progress.bookTitle
+  const bookTitle = progress?.bookTitle ?? null;
 
   // Обработчик клика по дню
   const handleDayClick = (date: string) => {
@@ -53,17 +56,26 @@ export const StudentProgress: FC = () => {
     <div>
       <Topbar title="Прогресс" />
       <div className="container" style={{ padding: '16px' }}>
-        {/* Верхняя секция с прогрессом и метриками */}
-        <div className="hstack" style={{ gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ProgressCircle 
-              value={progressPercent} 
-              size={120} 
-              strokeWidth={10} 
-              tone="primary" 
-            />
-          </div>
-          
+        {/* Верхняя секция с карточкой прогресса и метриками */}
+        <div className={styles.topSection}>
+          <Card className={styles.progressCard}>
+            <div className={styles.progressCircleWrap}>
+              <ProgressCircle
+                value={progressPercent}
+                size={120}
+                strokeWidth={10}
+                tone="primary"
+              />
+            </div>
+            <div className={styles.progressInfo}>
+              <div className={styles.bookTitle}>{bookTitle || 'Активная книга'}</div>
+              <div className={styles.pagesText}>Прочитано {progressPercent}%</div>
+              <div className={styles.daysText}>
+                Дней: {progress?.daysDone || 0} / {progress?.daysTotal || 0}
+              </div>
+            </div>
+          </Card>
+
           <Card style={{ flex: 1, minWidth: '280px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>

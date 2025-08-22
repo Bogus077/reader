@@ -12,7 +12,18 @@ export const loadAssignmentByDateFx = createEffect(async (date: string) => getSt
 export const $today = createStore<Assignment|null>(null).on(loadTodayFx.doneData, (_, d) => d.assignment ?? null);
 export const $strips = createStore<Strip[]>([]).on(loadStripsFx.doneData, (_, d) => d.strips ?? []);
 export const $progress = createStore<StudentProgress | null>(null)
-  .on(loadProgressFx.doneData, (_, d) => (d.ok ? { currentStreak: d.currentStreak, bestStreak: d.bestStreak, avgRating: d.avgRating, daysDone: d.daysDone, daysTotal: d.daysTotal } : null));
+  .on(loadProgressFx.doneData, (_, d) => (
+    d.ok
+      ? {
+          currentStreak: d.currentStreak,
+          bestStreak: d.bestStreak,
+          avgRating: d.avgRating,
+          daysDone: d.daysDone,
+          daysTotal: d.daysTotal,
+          bookTitle: (d as any).bookTitle ?? null,
+        }
+      : null
+  ));
 
 interface Book {
   id: number;

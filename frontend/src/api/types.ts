@@ -35,4 +35,5 @@ export interface StudentProgress {
   avgRating: number;
   daysDone: number;
   daysTotal: number;
+  bookTitle?: string | null;
 }
