@@ -479,6 +479,77 @@ router.get('/students/:id', requireAuth, requireMentor, async (req, res) => {
 });
 
 /**
+ * Список заданий студента за период
+ * GET /mentor/students/:id/assignments?from=YYYY-MM-DD&to=YYYY-MM-DD&student_book_id=ID
+ */
+router.get('/students/:id/assignments', requireAuth, requireMentor, async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.id);
+    if (isNaN(studentId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid student ID' });
+    }
+
+    // Проверим, что студент существует
+    const student = await User.findOne({ where: { id: studentId, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    const { from, to, student_book_id } = req.query as { from?: string; to?: string; student_book_id?: string };
+
+    // Определяем tz для корректной дефолтной выборки
+    const tz = student.tz || 'Europe/Samara';
+    const today = todayStr(tz);
+
+    // Валидация диапазона дат (если передан)
+    const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+    const fromDate = from && isDate(from) ? from : dayjs(today).subtract(30, 'day').format('YYYY-MM-DD');
+    const toDate = to && isDate(to) ? to : dayjs(today).add(30, 'day').format('YYYY-MM-DD');
+
+    // Определяем книгу студента: либо по параметру, либо текущую активную
+    let sb: StudentBook | null = null;
+    if (student_book_id) {
+      const sbId = parseInt(student_book_id);
+      if (!isNaN(sbId)) {
+        sb = await StudentBook.findOne({ where: { id: sbId, student_id: studentId } });
+      }
+    } else {
+      sb = await StudentBook.findOne({ where: { student_id: studentId, status: 'active' } });
+    }
+
+    if (!sb) {
+      return res.json({ ok: true, assignments: [] });
+    }
+
+    const assignments = await Assignment.findAll({
+      where: {
+        student_book_id: sb.id,
+        date: { [Op.between]: [fromDate, toDate] },
+      },
+      order: [['date', 'ASC']],
+    });
+
+    const items = assignments.map(a => ({
+      id: a.id,
+      date: a.date,
+      deadline_time: a.deadline_time,
+      status: a.status,
+      target: {
+        percent: a.target_percent,
+        page: a.target_page,
+        chapter: a.target_chapter,
+        last_paragraph: a.target_last_paragraph,
+      },
+    }));
+
+    return res.json({ ok: true, assignments: items });
+  } catch (error) {
+    console.error('Error fetching student assignments:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
  * Изменение задания
  * PATCH /mentor/assignments/:id
  */

@@ -140,3 +140,11 @@ export const createMentorBook = (body: {
   api.post('mentor/books', { json: body }).json<{ ok: true; book: {
     id:number; title:string; author:string; category:string; difficulty:number; description?:string|null; cover_url?:string|null; source_url?:string|null; created_by?: number|null;
   } }>();
+
+// Mentor: list assignments for a student (by date range)
+export const getMentorStudentAssignments = (
+  studentId: number,
+  params: { from?: string; to?: string; student_book_id?: number }
+) => api
+  .get(`mentor/students/${studentId}/assignments`, { searchParams: params as any })
+  .json<{ ok: boolean; assignments: Assignment[] }>();

@@ -21,7 +21,7 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, Calendar, BookOpen, CalendarRange, BookPlus, CalendarPlus } from 'lucide-react';
 import styles from './StudentCard.module.scss';
-import { gradeAssignment, patchAssignment, assignStudentBook, generateAssignments, getBooksAvailable, createAssignment } from '../../api/client';
+import { gradeAssignment, patchAssignment, assignStudentBook, generateAssignments, getBooksAvailable, createAssignment, getMentorStudentAssignments } from '../../api/client';
 import { Assignment, Strip } from '../../api/types';
 
 export const MentorStudentCard: FC = () => {
@@ -55,6 +55,7 @@ export const MentorStudentCard: FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [availableBooks, setAvailableBooks] = useState<Array<{ id: number; title: string; author: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingAssignment, setIsLoadingAssignment] = useState(false);
 
   // Загрузка данных студента при монтировании
   useEffect(() => {
@@ -163,10 +164,32 @@ export const MentorStudentCard: FC = () => {
   // Получение задания для выбранного дня или сегодняшнего дня
   const getAssignmentForSelectedDay = (): Assignment | null => {
     if (selectedDay) {
+      // Если уже загружено через API — используем
+      if (selectedAssignment && selectedAssignment.date === selectedDay) return selectedAssignment;
+      // Пробуем из имеющихся полосок
       const assignment = strips.find((strip: Strip) => strip.date === selectedDay)?.assignment;
       return assignment || null;
     }
     return todayAssignment?.assignment || null;
+  };
+
+  // Подгрузка задания для конкретной даты
+  const loadAssignmentForDate = async (date: string) => {
+    if (!id) return;
+    try {
+      setIsLoadingAssignment(true);
+      const resp = await getMentorStudentAssignments(Number(id), { from: date, to: date });
+      if (resp.ok && resp.assignments && resp.assignments.length > 0) {
+        setSelectedAssignment(resp.assignments[0]);
+      } else {
+        setSelectedAssignment(null);
+      }
+    } catch (e) {
+      console.error('Error loading assignment for date', e);
+      setSelectedAssignment(null);
+    } finally {
+      setIsLoadingAssignment(false);
+    }
   };
   
   // Обработчик открытия модального окна оценки
@@ -373,7 +396,13 @@ export const MentorStudentCard: FC = () => {
                       status: strip.status,
                       rating: strip.rating !== null ? strip.rating : undefined
                     }))}
-                    onSelect={(idx) => setSelectedDay(strips[idx]?.date || null)}
+                    onSelect={async (idx) => {
+                      const date = strips[idx]?.date || null;
+                      setSelectedDay(date);
+                      if (date) {
+                        await loadAssignmentForDate(date);
+                      }
+                    }}
                     className={styles.dayStrips}
                   />
                 )}
@@ -436,7 +465,7 @@ export const MentorStudentCard: FC = () => {
                   <div className={styles.actions}>
                     <Button 
                       variant="success" 
-                      disabled={isLoading || !getAssignmentForSelectedDay() || !canGradeAssignment(getAssignmentForSelectedDay())}
+                      disabled={isLoading || isLoadingAssignment || !getAssignmentForSelectedDay() || !canGradeAssignment(getAssignmentForSelectedDay())}
                       title={!canGradeAssignment(getAssignmentForSelectedDay()) ? 'Задание не готово к оценке' : ''}
                       onClick={handleOpenGradeModal}
                     >
@@ -444,7 +473,7 @@ export const MentorStudentCard: FC = () => {
                     </Button>
                     <Button 
                       variant="secondary" 
-                      disabled={isLoading || !getAssignmentForSelectedDay() || !canEditAssignment(getAssignmentForSelectedDay())}
+                      disabled={isLoading || isLoadingAssignment || !getAssignmentForSelectedDay() || !canEditAssignment(getAssignmentForSelectedDay())}
                       title={!canEditAssignment(getAssignmentForSelectedDay()) ? 'Задание нельзя редактировать' : ''}
                       onClick={handleOpenEditModal}
                     >
