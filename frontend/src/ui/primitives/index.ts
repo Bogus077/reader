@@ -6,3 +6,4 @@ export * from './Card';
 export * from './Divider';
 export * from './Paper';
 export * from './Spinner';
+export * from './Skeleton';

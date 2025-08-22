@@ -338,16 +338,15 @@ export const MentorStudentCard: FC = () => {
   return (
     <div>
       <Topbar title={studentData ? `${studentData.name}` : 'Карточка ученика'} />
-      {(isPageLoading || isLoading) && (
-        <Loader fullscreen message="Загрузка данных…" />
-      )}
       <div className={styles.container}>
         {studentData ? (
           <div className={styles.grid}>
             {/* Левая колонка */}
             <div>
               {/* Активная книга */}
-              {activeBook && (
+              {isPageLoading ? (
+                <Loader size="sm" message="Загрузка…" />
+              ) : activeBook && (
                 <div className={styles.bookCard}>
                   <img 
                     src={activeBook.cover_url || 'https://via.placeholder.com/80x120?text=No+Cover'} 
@@ -365,54 +364,60 @@ export const MentorStudentCard: FC = () => {
               {/* Полоски дней */}
               <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>Прогресс чтения</h3>
-                <DayStrips 
-                  items={strips.map((strip: Strip) => ({
-                    date: strip.date,
-                    status: strip.status,
-                    rating: strip.rating !== null ? strip.rating : undefined
-                  }))}
-                  onSelect={(idx) => setSelectedDay(strips[idx]?.date || null)}
-                  className={styles.dayStrips}
-                />
+                {isPageLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : (
+                  <DayStrips 
+                    items={strips.map((strip: Strip) => ({
+                      date: strip.date,
+                      status: strip.status,
+                      rating: strip.rating !== null ? strip.rating : undefined
+                    }))}
+                    onSelect={(idx) => setSelectedDay(strips[idx]?.date || null)}
+                    className={styles.dayStrips}
+                  />
+                )}
               </div>
 
               {/* Задание на сегодня */}
               <Card className={styles.card}>
                 <h3 className={styles.sectionTitle}>Задание на сегодня</h3>
-                {(() => {
+                {isPageLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : (() => {
                   const today = todayAssignment?.assignment || null;
                   return today ? (
-                  <>
-                    <div className={styles.infoRow}>
-                      <div className={styles.label}>Цель:</div>
-                      <div className={styles.value}>
-                        {today.target?.percent != null && today.target.percent > 0 && `${today.target.percent}%`}
-                        {today.target?.page != null && today.target.page > 0 && `${today.target.page} стр.`}
-                        {today.target?.chapter && `\u00A0•\u00A0Глава ${today.target.chapter}`}
-                      </div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.label}>Дедлайн:</div>
-                      <div className={styles.value}>
-                        <Calendar size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                        {formatDate(today.date)} {'\u00A0•\u00A0'} {today.deadline_time}
-                      </div>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <div className={styles.label}>Статус:</div>
-                      <div className={styles.value}>
-                        <Badge tone={getAssignmentStatus(today.status).tone}>
-                          {getAssignmentStatus(today.status).text}
-                        </Badge>
-                      </div>
-                    </div>
-                    {today.description && (
+                    <>
                       <div className={styles.infoRow}>
-                        <div className={styles.label}>Описание:</div>
-                        <div className={styles.value}>{today.description}</div>
+                        <div className={styles.label}>Цель:</div>
+                        <div className={styles.value}>
+                          {today.target?.percent != null && today.target.percent > 0 && `${today.target.percent}%`}
+                          {today.target?.page != null && today.target.page > 0 && `${today.target.page} стр.`}
+                          {today.target?.chapter && `\u00A0•\u00A0Глава ${today.target.chapter}`}
+                        </div>
                       </div>
-                    )}
-                  </>
+                      <div className={styles.infoRow}>
+                        <div className={styles.label}>Дедлайн:</div>
+                        <div className={styles.value}>
+                          <Calendar size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                          {formatDate(today.date)} {'\u00A0•\u00A0'} {today.deadline_time}
+                        </div>
+                      </div>
+                      <div className={styles.infoRow}>
+                        <div className={styles.label}>Статус:</div>
+                        <div className={styles.value}>
+                          <Badge tone={getAssignmentStatus(today.status).tone}>
+                            {getAssignmentStatus(today.status).text}
+                          </Badge>
+                        </div>
+                      </div>
+                      {today.description && (
+                        <div className={styles.infoRow}>
+                          <div className={styles.label}>Описание:</div>
+                          <div className={styles.value}>{today.description}</div>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div>Нет активного задания на сегодня</div>
                   );
@@ -425,24 +430,28 @@ export const MentorStudentCard: FC = () => {
               {/* Быстрые действия */}
               <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>Быстрые действия</h3>
-                <div className={styles.actions}>
-                  <Button 
-                    variant="success" 
-                    disabled={!getAssignmentForSelectedDay() || !canGradeAssignment(getAssignmentForSelectedDay())}
-                    title={!canGradeAssignment(getAssignmentForSelectedDay()) ? 'Задание не готово к оценке' : ''}
-                    onClick={handleOpenGradeModal}
-                  >
-                    Оценить
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    disabled={!getAssignmentForSelectedDay() || !canEditAssignment(getAssignmentForSelectedDay())}
-                    title={!canEditAssignment(getAssignmentForSelectedDay()) ? 'Задание нельзя редактировать' : ''}
-                    onClick={handleOpenEditModal}
-                  >
-                    Редактировать задание
-                  </Button>
-                </div>
+                {isPageLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : (
+                  <div className={styles.actions}>
+                    <Button 
+                      variant="success" 
+                      disabled={isLoading || !getAssignmentForSelectedDay() || !canGradeAssignment(getAssignmentForSelectedDay())}
+                      title={!canGradeAssignment(getAssignmentForSelectedDay()) ? 'Задание не готово к оценке' : ''}
+                      onClick={handleOpenGradeModal}
+                    >
+                      Оценить
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      disabled={isLoading || !getAssignmentForSelectedDay() || !canEditAssignment(getAssignmentForSelectedDay())}
+                      title={!canEditAssignment(getAssignmentForSelectedDay()) ? 'Задание нельзя редактировать' : ''}
+                      onClick={handleOpenEditModal}
+                    >
+                      Редактировать задание
+                    </Button>
+                  </div>
+                )}
               </div>
               
               {/* Управление книгами и планом */}
@@ -452,6 +461,7 @@ export const MentorStudentCard: FC = () => {
                   <Button
                     variant="primary"
                     onClick={handleAssignBookClick}
+                    disabled={isLoading}
                   >
                     <BookPlus size={16} style={{ marginRight: '8px' }} />
                     Назначить книгу
@@ -468,7 +478,7 @@ export const MentorStudentCard: FC = () => {
                   <Button
                     variant="secondary"
                     onClick={handleOpenCreateModal}
-                    disabled={!activeBook}
+                    disabled={!activeBook || isLoading}
                     title={!activeBook ? "Сначала назначьте книгу" : ""}
                   >
                     <Calendar size={16} style={{ marginRight: '8px' }} />
@@ -480,26 +490,32 @@ export const MentorStudentCard: FC = () => {
               {/* Статистика */}
               <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>Статистика</h3>
-                <div className={styles.statsGrid}>
-                  <div className={styles.statCard}>
-                    <div className={styles.statValue}>{stats.currentStreak}</div>
-                    <div className={styles.statLabel}>Текущая серия</div>
+                {isPageLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : (
+                  <div className={styles.statsGrid}>
+                    <div className={styles.statCard}>
+                      <div className={styles.statValue}>{stats.currentStreak}</div>
+                      <div className={styles.statLabel}>Текущая серия</div>
+                    </div>
+                    <div className={styles.statCard}>
+                      <div className={styles.statValue}>{stats.bestStreak || 0}</div>
+                      <div className={styles.statLabel}>Лучшая серия</div>
+                    </div>
+                    <div className={styles.statCard}>
+                      <div className={styles.statValue}>{stats.avgRating ? stats.avgRating.toFixed(1) : '0.0'}</div>
+                      <div className={styles.statLabel}>Средняя оценка</div>
+                    </div>
                   </div>
-                  <div className={styles.statCard}>
-                    <div className={styles.statValue}>{stats.bestStreak || 0}</div>
-                    <div className={styles.statLabel}>Лучшая серия</div>
-                  </div>
-                  <div className={styles.statCard}>
-                    <div className={styles.statValue}>{stats.avgRating ? stats.avgRating.toFixed(1) : '0.0'}</div>
-                    <div className={styles.statLabel}>Средняя оценка</div>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Последние оценки */}
               <Card className={styles.card}>
                 <h3 className={styles.sectionTitle}>Последние оценки</h3>
-                {recentRatings && recentRatings.length > 0 ? (
+                {isPageLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : recentRatings && recentRatings.length > 0 ? (
                   recentRatings.map((rating, index) => (
                     <div key={index} className={styles.ratingItem}>
                       <div className={styles.ratingDate}>{formatDate(rating.date)}</div>
@@ -516,7 +532,7 @@ export const MentorStudentCard: FC = () => {
             </div>
           </div>
         ) : (
-          <div>Загрузка данных...</div>
+          <div style={{ padding: 16 }}><Loader message="Загрузка данных…" /></div>
         )}
       </div>
       

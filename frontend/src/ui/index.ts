@@ -9,6 +9,7 @@ export * from './primitives/Paper';
 export * from './primitives/Badge';
 export * from './primitives/Divider';
 export * from './primitives/Spinner';
+export * from './primitives/Skeleton';
 export * from './primitives/Tabbar';
 export * from './primitives/Topbar';
 

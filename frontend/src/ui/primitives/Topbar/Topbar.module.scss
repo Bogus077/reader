@@ -8,14 +8,15 @@
   height: 60px;
   padding: 0 16px;
   background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  
+  border-bottom: 1px solid #e5e7eb;
+
   // Безопасная зона для iOS
   padding-top: env(safe-area-inset-top, 0);
   height: calc(60px + env(safe-area-inset-top, 0));
 }
 
-.left, .right {
+.left,
+.right {
   display: flex;
   align-items: center;
   min-width: 60px;

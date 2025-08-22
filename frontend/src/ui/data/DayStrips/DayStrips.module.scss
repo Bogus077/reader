@@ -1,133 +1,54 @@
-// Переменные для цветов статусов
-$done-color: #2ecc71;
-$current-color: #4a6cf7;
-$future-color: #95a5a6;
-$missed-color: #e74c3c;
-
-// Контейнер для полосок дней
 .container {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 1px;
+  gap: 6px;
   width: 100%;
-  padding: 4px 0;
+  padding: 0;
 }
 
-// Базовый стиль для полоски дня
-.strip {
+.bar {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60px;
-  padding: 8px 4px;
-  border-radius: 7px;
-  transition: all 0.2s ease;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
   cursor: default;
-  
+
   &.selectable {
     cursor: pointer;
-    
-    &:hover, &:focus {
-      outline: 2px solid rgba(0, 0, 0, 0.2);
-      outline-offset: -1px;
+
+    &:hover {
+      filter: brightness(0.98);
     }
-    
-    &:focus {
-      outline: 2px solid rgba(0, 0, 0, 0.3);
+
+    &:focus-visible {
+      box-shadow: 0 0 0 3px var(--primary-light);
+      outline: none;
     }
   }
 }
 
-// Стили для даты
-.date {
-  font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-// Стили для рейтинга
-.rating {
-  display: flex;
-  justify-content: center;
-  font-size: 12px;
-}
-
-.star {
-  color: rgba(0, 0, 0, 0.2);
-  
-  &.filled {
-    color: #f1c40f;
-  }
-}
-
-// Стили для разных статусов
 .done {
-  background-color: $done-color;
-  color: white;
-  
-  .star {
-    color: rgba(255, 255, 255, 0.3);
-    
-    &.filled {
-      color: #fff;
-    }
-  }
+  background-color: var(--success);
 }
 
 .current {
-  background-color: $current-color;
-  color: white;
-  
-  .star {
-    color: rgba(255, 255, 255, 0.3);
-    
-    &.filled {
-      color: #fff;
-    }
-  }
+  background-color: var(--primary);
 }
 
 .future {
-  background-color: $future-color;
-  color: white;
-  
-  .star {
-    color: rgba(255, 255, 255, 0.3);
-    
-    &.filled {
-      color: #fff;
-    }
-  }
+  background-color: var(--gray-300);
 }
 
 .missed {
-  background-color: $missed-color;
-  color: white;
-  
-  .star {
-    color: rgba(255, 255, 255, 0.3);
-    
-    &.filled {
-      color: #fff;
-    }
-  }
+  background-color: var(--danger);
 }
 
-// Адаптивные стили для мобильных устройств
 @media (max-width: 768px) {
-  .strip {
-    min-height: 50px;
-    padding: 6px 2px;
-  }
-  
-  .date {
-    font-size: 14px;
-  }
-  
-  .rating {
-    font-size: 10px;
+  .bar {
+    height: 10px;
   }
 }
