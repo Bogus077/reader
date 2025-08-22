@@ -119,7 +119,7 @@ export async function getTodayAssignment(studentBookId: number, tz: string) {
 
 // Расширенный тип для Assignment с включенным Recap
 interface AssignmentWithRecap extends Assignment {
-  Recap?: {
+  recap?: {
     mentor_rating?: number | null;
     mentor_comment?: string | null;
   } | null;
@@ -163,6 +163,7 @@ export async function listAssignmentsForActive(studentId: number): Promise<{ sb:
       },
       include: [{
         model: Recap,
+        as: 'recap',
         required: false
       }],
       order: [['date', 'ASC']]
@@ -242,8 +243,8 @@ export async function buildStrips(studentId: number, tz: string): Promise<Strip[
       };
       
       // Добавляем рейтинг, если есть
-      if ((assignment as any).Recap && (assignment as any).Recap.mentor_rating) {
-        strip.rating = (assignment as any).Recap.mentor_rating;
+      if ((assignment as any).recap && (assignment as any).recap.mentor_rating) {
+        strip.rating = (assignment as any).recap.mentor_rating;
       }
       
       // Добавляем время отправки, если есть

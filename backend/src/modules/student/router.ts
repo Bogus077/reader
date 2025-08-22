@@ -288,6 +288,7 @@ router.get('/progress', async (req, res) => {
     const recaps = await Recap.findAll({
       include: [{
         model: Assignment,
+        as: 'assignment', // Добавляем алиас, соответствующий модели
         where: {
           student_book_id: studentBook.id,
           status: 'graded'
