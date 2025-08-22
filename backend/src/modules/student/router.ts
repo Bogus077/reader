@@ -7,6 +7,7 @@ import Recap from '../recaps/model';
 import Assignment from '../assignments/model';
 import Book from '../books/model';
 import { Op } from 'sequelize';
+import StudentBook from '../studentBooks/model';
 
 // Используем require для dayjs и его плагинов, так как нет типов
 const dayjs = require('dayjs');
@@ -94,6 +95,28 @@ router.get('/current-book', async (req, res) => {
       ok: false,
       error: 'Internal server error'
     });
+  }
+});
+
+/**
+ * GET /student/finished-books
+ * Вернуть список ID книг, которые студент завершил
+ */
+router.get('/finished-books', async (req, res) => {
+  try {
+    const studentId = req.user.id;
+
+    const rows = await StudentBook.findAll({
+      where: { student_id: studentId, status: 'finished' },
+      attributes: ['book_id']
+    });
+
+    const bookIds = rows.map((r: any) => r.book_id);
+
+    return res.json({ ok: true, bookIds });
+  } catch (error) {
+    console.error('Error fetching finished books:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });
 

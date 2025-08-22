@@ -22,6 +22,7 @@
 }
 
 .coverWrapper {
+  position: relative;
   flex-shrink: 0;
   width: 120px;
   height: 180px;
@@ -37,6 +38,13 @@
   .clickable:hover & {
     transform: scale(1.05);
   }
+}
+
+.statusBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
 }
 
 .content {

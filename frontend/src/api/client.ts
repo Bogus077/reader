@@ -60,6 +60,19 @@ export const getBooksAvailable = () =>
     source_url?:string 
   }> }>();
 
+// STUDENT LIBRARY HELPERS
+export const getStudentCurrentBook = () =>
+  api.get('student/current-book').json<{
+    ok: boolean;
+    book: { id:number; title:string; author:string; cover_url?:string } | null;
+    progress: { percent: number; daysDone: number; daysTotal: number } | null;
+    currentStreak: number;
+    bestStreak: number;
+  }>();
+
+export const getStudentFinishedBooks = () =>
+  api.get('student/finished-books').json<{ ok: boolean; bookIds: number[] }>();
+
 // MENTOR
 export const getMentorStudentCard = (id: number) =>
   api.get(`mentor/students/${id}`).json<{ 

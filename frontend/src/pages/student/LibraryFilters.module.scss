@@ -1,0 +1,90 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.searchWrap {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 220px;
+  flex: 1 1 320px;
+}
+
+.searchRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.actionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.groupTitle {
+  color: var(--gray-600);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--white);
+  color: var(--gray-700);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chipActive {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--gray-300);
+  border-radius: var(--radius-full);
+  background: var(--white);
+  cursor: pointer;
+}
+
+.dotActive {
+  border-color: var(--primary);
+  background: var(--primary);
+}

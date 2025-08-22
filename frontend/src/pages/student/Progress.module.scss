@@ -1,7 +1,156 @@
 .dayItem {
+  align-self: auto;
+  display: flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background: var(--muted);
   }
+}
+
+.dayDate {
+  align-self: auto;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 80px;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--gray-800);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.dayStatus {
+  align-self: auto;
+  display: flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--gray-500);
+}
+
+.statusSuccess {
+  align-self: auto;
+  display: inline-flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--success);
+}
+
+.statusDanger {
+  align-self: auto;
+  display: inline-flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--danger);
+}
+
+.statusMuted {
+  align-self: auto;
+  display: inline-flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--gray-500);
+}
+
+.dayRating {
+  align-self: auto;
+  display: flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.dayTarget {
+  align-self: auto;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0 0 0 auto;
+  background: transparent;
+  color: var(--gray-600);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.historyHeader {
+  align-self: auto;
+  display: block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0 0 16px 0;
+  background: transparent;
+  color: var(--gray-900);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .topSection {
@@ -31,6 +180,11 @@
   gap: 6px;
 }
 
+.skeletonGrid {
+  display: grid;
+  gap: 8px;
+}
+
 .bookTitle {
   color: var(--gray-900);
   font-weight: 600;
@@ -48,4 +202,100 @@
   color: var(--gray-700);
   font-size: 13px;
   line-height: 1.3;
+}
+
+.metricsGrid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  min-height: 110px;
+  flex: 0 0 auto;
+  min-width: 180px;
+  scroll-snap-align: start;
+}
+
+.metricIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--primary);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.metricValue {
+  color: var(--gray-900);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.metricLabel {
+  color: var(--gray-700);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 0px;
+  width: 100vw;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gray-400);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.dotActive {
+  background: var(--primary);
+  transform: scale(1.4);
+}
+
+@media (max-width: 600px) {
+  .metricsGrid {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 12px;
+    padding: 4px 16px 4px 2px;
+    scrollbar-color: transparent transparent;
+    scroll-snap-type: x mandatory;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .metricsGrid::-webkit-scrollbar {
+    display: none;
+  }
 }

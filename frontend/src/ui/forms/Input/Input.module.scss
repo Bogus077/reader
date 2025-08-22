@@ -51,6 +51,7 @@
 
 .prefix, .suffix {
   position: absolute;
+  z-index: 1;
   top: 50%;
   transform: translateY(-50%);
   color: var(--gray-500);

@@ -5,14 +5,36 @@
   margin-top: 16px;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.searchWrap {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 240px;
+  flex: 1 1 320px;
+}
+
+.control {
+  display: block;
+  box-sizing: border-box;
+  min-width: 180px;
+  flex: 1 1 200px;
+}
+
 .emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  text-align: center;
   color: #666;
+  text-align: center;
   
   svg {
     margin-bottom: 16px;

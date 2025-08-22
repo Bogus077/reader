@@ -280,7 +280,7 @@ export default function StudentToday() {
               {enrichedToday?.mentor_comment?.trim() && (
                 <div className={styles.mt8}>
                   <InfoCallout
-                    title="Комментарий ментора"
+                    title="Комментарий преподавателя"
                     description={enrichedToday.mentor_comment!.trim()}
                     tone="info"
                   />
@@ -336,6 +336,7 @@ export default function StudentToday() {
                       console.error(error);
                     }
                   }}
+                  fullWidth
                 >
                   <span className={clsx("hstack", styles.row)}>
                     <CheckCircle2 size={18} /> Отметить как прочитано

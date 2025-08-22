@@ -30,6 +30,10 @@ export type BookCardProps = {
    */
   progress?: number;
   /**
+   * Статус книги для отображения бейджа
+   */
+  status?: 'in_progress' | 'finished';
+  /**
    * Компактный вариант отображения
    * @default false
    */
@@ -55,6 +59,7 @@ export const BookCard: FC<BookCardProps> = ({
   category,
   difficulty,
   progress,
+  status,
   compact = false,
   actionButton,
   className,
@@ -87,6 +92,13 @@ export const BookCard: FC<BookCardProps> = ({
       tabIndex={onClick ? 0 : undefined}
     >
       <div className={styles.coverWrapper}>
+        {status && (
+          <div className={styles.statusBadge} aria-label={status === 'finished' ? 'Прочитано' : 'В процессе'}>
+            <Badge tone={status === 'finished' ? 'success' : 'warning'}>
+              {status === 'finished' ? 'Прочитано' : 'В процессе'}
+            </Badge>
+          </div>
+        )}
         <img 
           src={coverUrl} 
           alt={`Обложка книги "${title}"`} 
