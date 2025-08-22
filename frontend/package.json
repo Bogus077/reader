@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 3020 --host",
+    "docker-start": "npm run build && npm run preview"
   },
   "dependencies": {
     "clsx": "^2.1.0",
