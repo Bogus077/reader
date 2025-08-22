@@ -33,6 +33,7 @@ interface Book {
   author: string;
   category: string;
   difficulty: number;
+  description?: string | null;
   cover_url?: string;
   source_url?: string;
 }

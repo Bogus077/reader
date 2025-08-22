@@ -38,6 +38,8 @@ const MentorLibrary: FC = () => {
                 author={book.author}
                 category={book.category}
                 difficulty={book.difficulty}
+                description={book.description ?? undefined}
+                sourceUrl={book.source_url ?? undefined}
                 compact
               />
             ))}

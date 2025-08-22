@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { useUnit } from 'effector-react';
 import { BookOpen } from 'lucide-react';
-import { Topbar, Tabbar, Button, BookCard } from '../../ui';
+import { Topbar, Tabbar, BookCard } from '../../ui';
 import { $booksAvailable, loadBooksAvailableFx, $currentBook, loadCurrentBookFx, $finishedBookIds, loadFinishedBooksFx } from '../../store/student';
 import styles from './Library.module.scss';
 import { LibraryFilters } from './LibraryFilters';
@@ -111,14 +111,11 @@ export const StudentLibrary: FC = () => {
                   author={book.author}
                   category={book.category}
                   difficulty={book.difficulty}
+                  description={book.description ?? undefined}
+                  sourceUrl={book.source_url ?? undefined}
                   progress={progress}
                   status={status}
                   compact
-                  actionButton={
-                    <Button variant="primary" disabled>
-                      Подробнее
-                    </Button>
-                  }
                 />
                 );
               })}

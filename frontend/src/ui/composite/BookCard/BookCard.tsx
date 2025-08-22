@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { FC } from "react";
 import clsx from "clsx";
 import { Badge } from "../../feedback/Badge/Badge";
 import { ProgressBar } from "../../data/ProgressBar/ProgressBar";
@@ -34,14 +34,18 @@ export type BookCardProps = {
    */
   status?: 'in_progress' | 'finished';
   /**
+   * Описание книги (опционально)
+   */
+  description?: string;
+  /**
+   * Ссылка на источник (опционально)
+   */
+  sourceUrl?: string;
+  /**
    * Компактный вариант отображения
    * @default false
    */
   compact?: boolean;
-  /**
-   * Слот для кнопки действия
-   */
-  actionButton?: ReactNode;
   /**
    * Дополнительные CSS классы
    */
@@ -60,8 +64,9 @@ export const BookCard: FC<BookCardProps> = ({
   difficulty,
   progress,
   status,
+  description,
+  sourceUrl,
   compact = false,
-  actionButton,
   className,
   onClick,
 }) => {
@@ -122,6 +127,22 @@ export const BookCard: FC<BookCardProps> = ({
             {difficultyDots}
           </div>
         </div>
+        {description && (
+          <p className={styles.description} title={description}>
+            {description}
+          </p>
+        )}
+        {sourceUrl && (
+          <a
+            className={styles.sourceLink}
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Открыть источник «${title}» в новой вкладке`}
+          >
+            Источник
+          </a>
+        )}
         
         {progress !== undefined && (
           <div className={styles.progressWrapper}>
@@ -129,12 +150,6 @@ export const BookCard: FC<BookCardProps> = ({
               value={progress} 
               className={styles.progress}
             />
-          </div>
-        )}
-        
-        {actionButton && (
-          <div className={styles.action}>
-            {actionButton}
           </div>
         )}
       </div>

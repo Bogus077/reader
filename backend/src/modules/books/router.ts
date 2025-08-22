@@ -11,7 +11,7 @@ const router = express.Router();
 router.get('/available', requireAuth, async (req, res) => {
   try {
     const books = await Book.findAll({
-      attributes: ['id', 'title', 'author', 'category', 'difficulty', 'cover_url', 'source_url']
+      attributes: ['id', 'title', 'author', 'category', 'difficulty', 'description', 'cover_url', 'source_url']
     });
     
     return res.json({

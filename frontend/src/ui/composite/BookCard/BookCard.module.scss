@@ -91,6 +91,29 @@
   gap: 4px;
 }
 
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 8px;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.4;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.sourceLink {
+  position: relative;
+  display: inline-block;
+  margin-top: 8px;
+  color: #4a6cf7;
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
 .difficultyDot {
   width: 8px;
   height: 8px;
