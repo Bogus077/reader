@@ -396,6 +396,7 @@ export const MentorStudentCard: FC = () => {
                       status: strip.status,
                       rating: strip.rating !== null ? strip.rating : undefined
                     }))}
+                    selectedDate={selectedDay || undefined}
                     onSelect={async (idx) => {
                       const date = strips[idx]?.date || null;
                       setSelectedDay(date);
@@ -408,47 +409,47 @@ export const MentorStudentCard: FC = () => {
                 )}
               </div>
 
-              {/* Задание на сегодня */}
+              {/* Задание: выбранная дата или сегодня */}
               <Card className={styles.card}>
-                <h3 className={styles.sectionTitle}>Задание на сегодня</h3>
+                <h3 className={styles.sectionTitle}>{selectedDay ? `Задание на ${formatDate(selectedDay)}` : 'Задание на сегодня'}</h3>
                 {isPageLoading ? (
                   <Loader size="sm" message="Загрузка…" />
                 ) : (() => {
-                  const today = todayAssignment?.assignment || null;
-                  return today ? (
+                  const current = getAssignmentForSelectedDay();
+                  return current ? (
                     <>
                       <div className={styles.infoRow}>
                         <div className={styles.label}>Цель:</div>
                         <div className={styles.value}>
-                          {today.target?.percent != null && today.target.percent > 0 && `${today.target.percent}%`}
-                          {today.target?.page != null && today.target.page > 0 && `${today.target.page} стр.`}
-                          {today.target?.chapter && `\u00A0•\u00A0Глава ${today.target.chapter}`}
+                          {current.target?.percent != null && current.target.percent > 0 && `${current.target.percent}%`}
+                          {current.target?.page != null && current.target.page > 0 && `${current.target.page} стр.`}
+                          {current.target?.chapter && `\u00A0•\u00A0Глава ${current.target.chapter}`}
                         </div>
                       </div>
                       <div className={styles.infoRow}>
                         <div className={styles.label}>Дедлайн:</div>
                         <div className={styles.value}>
                           <Calendar size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                          {formatDate(today.date)} {'\u00A0•\u00A0'} {today.deadline_time}
+                          {formatDate(current.date)} {'\u00A0•\u00A0'} {current.deadline_time}
                         </div>
                       </div>
                       <div className={styles.infoRow}>
                         <div className={styles.label}>Статус:</div>
                         <div className={styles.value}>
-                          <Badge tone={getAssignmentStatus(today.status).tone}>
-                            {getAssignmentStatus(today.status).text}
+                          <Badge tone={getAssignmentStatus(current.status).tone}>
+                            {getAssignmentStatus(current.status).text}
                           </Badge>
                         </div>
                       </div>
-                      {today.description && (
+                      {current.description && (
                         <div className={styles.infoRow}>
                           <div className={styles.label}>Описание:</div>
-                          <div className={styles.value}>{today.description}</div>
+                          <div className={styles.value}>{current.description}</div>
                         </div>
                       )}
                     </>
                   ) : (
-                    <div>Нет активного задания на сегодня</div>
+                    <div>{selectedDay ? 'Нет задания на выбранную дату' : 'Нет активного задания на сегодня'}</div>
                   );
                 })()}
               </Card>

@@ -32,12 +32,17 @@ export type DayStripsProps = {
    * Дополнительные CSS классы
    */
   className?: string;
+  /**
+   * Выбранная дата
+   */
+  selectedDate?: string;
 };
 
 export const DayStrips: FC<DayStripsProps> = ({
   items,
   onSelect,
   className,
+  selectedDate,
 }) => {
   const handleClick = useCallback((idx: number) => {
     onSelect?.(idx);
@@ -58,7 +63,8 @@ export const DayStrips: FC<DayStripsProps> = ({
           className={clsx(
             styles.bar,
             styles[item.status],
-            onSelect && styles.selectable
+            onSelect && styles.selectable,
+            selectedDate === item.date && styles.selected
           )}
           onClick={onSelect ? () => handleClick(idx) : undefined}
           onKeyDown={onSelect ? (e) => handleKeyDown(e, idx) : undefined}

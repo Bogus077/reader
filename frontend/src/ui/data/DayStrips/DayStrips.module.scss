@@ -47,6 +47,11 @@
   background-color: var(--danger);
 }
 
+.selected {
+  box-shadow: 0 0 0 2px var(--primary);
+  transform: scaleY(1.15);
+}
+
 @media (max-width: 768px) {
   .bar {
     height: 10px;
