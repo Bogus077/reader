@@ -22,11 +22,12 @@ export const StudentLibrary: FC = () => {
             {books.map((book) => (
               <BookCard
                 key={book.id}
-                coverUrl={book.cover_url}
+                coverUrl={book.cover_url || ''}
                 title={book.title}
                 author={book.author}
                 category={book.category}
                 difficulty={book.difficulty}
+                compact
                 actionButton={
                   <Button variant="primary" disabled>
                     Подробнее

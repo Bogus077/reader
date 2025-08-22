@@ -52,6 +52,27 @@ export const gradeAssignmentSchema = z.object({
   })
 });
 
+// Схема для POST /mentor/assignments (создание одиночного задания)
+export const createAssignmentSchema = z.object({
+  body: z.object({
+    student_book_id: z.number().int().positive()
+      .describe('ID книги студента'),
+    date: z.string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/ , 'Должен быть в формате YYYY-MM-DD')
+      .describe('Дата задания в формате YYYY-MM-DD'),
+    deadline_time: z.string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Должен быть в формате HH:MM')
+      .describe('Время дедлайна в формате HH:MM'),
+    target_percent: z.number().nullable().optional(),
+    target_page: z.number().nullable().optional(),
+    target_chapter: z.string().nullable().optional(),
+    target_last_paragraph: z.string().nullable().optional(),
+  }).refine((data) =>
+    data.target_percent != null || data.target_page != null || data.target_chapter != null,
+    { message: 'Должна быть указана хотя бы одна цель: target_percent, target_page или target_chapter' }
+  )
+});
+
 // Схема для POST /mentor/student-books/assign
 export const assignBookSchema = z.object({
   body: z.object({

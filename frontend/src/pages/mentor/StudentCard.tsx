@@ -21,7 +21,7 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { CheckCircle, XCircle, Clock, Calendar, BookOpen, CalendarRange, BookPlus, CalendarPlus } from 'lucide-react';
 import styles from './StudentCard.module.scss';
-import { gradeAssignment, patchAssignment, assignStudentBook, generateAssignments, getBooksAvailable } from '../../api/client';
+import { gradeAssignment, patchAssignment, assignStudentBook, generateAssignments, getBooksAvailable, createAssignment } from '../../api/client';
 import { Assignment, Strip } from '../../api/types';
 
 export const MentorStudentCard: FC = () => {
@@ -48,6 +48,7 @@ export const MentorStudentCard: FC = () => {
   // Состояния для модальных окон
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAssignBookModalOpen, setIsAssignBookModalOpen] = useState(false);
   const [isGeneratePlanModalOpen, setIsGeneratePlanModalOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
@@ -83,6 +84,38 @@ export const MentorStudentCard: FC = () => {
     } catch (error) {
       console.error('Error loading available books:', error);
       setToastMessage('Ошибка при загрузке списка книг');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработчик создания задания
+  const handleCreateSubmit = async (data: AssignmentData) => {
+    if (!id || !activeBook) return;
+    try {
+      setIsLoading(true);
+      // Определяем дату для задания
+      const targetDate = selectedDay || todayAssignment?.date || new Date().toISOString().slice(0, 10);
+      const createMode: 'percent'|'page' = (activeBook.mode === 'percent' || activeBook.mode === 'page') ? activeBook.mode : 'page';
+      const payload = {
+        student_book_id: activeBook.student_book_id,
+        date: targetDate,
+        deadline_time: data.time,
+        // В зависимости от режима передаём нужную цель
+        target_page: (createMode === 'page') ? (data.pages ?? null) : null,
+        target_percent: (createMode === 'percent') ? (data.percent ?? null) : null,
+        target_chapter: data.chapter ? String(data.chapter) : null,
+        target_last_paragraph: data.lastParagraph ?? null,
+      };
+      const res = await createAssignment(payload);
+      if (res.ok) {
+        setToastMessage('Задание создано');
+        setIsCreateModalOpen(false);
+        await load(Number(id));
+      }
+    } catch (error: any) {
+      console.error('Error creating assignment:', error);
+      setToastMessage('Не удалось создать задание');
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +198,13 @@ export const MentorStudentCard: FC = () => {
   const handleGeneratePlanClick = () => {
     if (activeBook) {
       setIsGeneratePlanModalOpen(true);
+    }
+  };
+  
+  // Обработчик открытия модального окна создания задания
+  const handleOpenCreateModal = () => {
+    if (activeBook) {
+      setIsCreateModalOpen(true);
     }
   };
   
@@ -277,10 +317,11 @@ export const MentorStudentCard: FC = () => {
       }
       
       try {
+        const isPercent = (selectedAssignment.target?.percent ?? null) !== null;
         const payload = {
           deadline_time: data.time,                 // 'HH:mm'
-          target_page: data.pages ?? null,          // если меняем страницы
-          // target_percent: data.percent ?? null,  // если меняем проценты (оставь закомментировано, если UI ещё не даёт)
+          target_page: isPercent ? null : (data.pages ?? null),
+          target_percent: isPercent ? (data.percent ?? null) : null,
           target_chapter: data.chapter ? String(data.chapter) : null, // преобразуем в string, т.к. API ожидает string
           target_last_paragraph: data.lastParagraph ?? null,
         };
@@ -310,7 +351,7 @@ export const MentorStudentCard: FC = () => {
               {activeBook && (
                 <div className={styles.bookCard}>
                   <img 
-                    src={activeBook.coverUrl || 'https://via.placeholder.com/80x120?text=No+Cover'} 
+                    src={activeBook.cover_url || 'https://via.placeholder.com/80x120?text=No+Cover'} 
                     alt={activeBook.title} 
                     className={styles.bookCover} 
                   />
@@ -422,6 +463,15 @@ export const MentorStudentCard: FC = () => {
                     <CalendarPlus size={16} style={{ marginRight: '8px' }} />
                     Сгенерировать план
                   </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleOpenCreateModal}
+                    disabled={!activeBook}
+                    title={!activeBook ? "Сначала назначьте книгу" : ""}
+                  >
+                    <Calendar size={16} style={{ marginRight: '8px' }} />
+                    Добавить задание
+                  </Button>
                 </div>
               </div>
 
@@ -489,17 +539,42 @@ export const MentorStudentCard: FC = () => {
           initialData={{
             title: selectedAssignment.title || '',
             pages: selectedAssignment.target?.page || 0,
+            percent: selectedAssignment.target?.percent ?? null,
             time: selectedAssignment.deadline_time || '12:00',
             description: selectedAssignment.description || '',
             chapter: selectedAssignment.target?.chapter ? Number(selectedAssignment.target.chapter) : null,
             lastParagraph: selectedAssignment.target?.last_paragraph || ''
           }}
           onSubmit={handleEditSubmit}
+          // Режим редактирования определяем из самого задания
+          mode={(selectedAssignment.target?.percent ?? null) !== null ? 'percent' : 'page'}
           isGraded={selectedAssignment.status === 'graded'}
           isDeadlinePassed={new Date(`${selectedAssignment.date}T${selectedAssignment.deadline_time}`) < new Date()}
           disabled={!['pending', 'submitted'].includes(selectedAssignment.status)}
           disabledReason={!['pending', 'submitted'].includes(selectedAssignment.status) ? 
             'Нельзя редактировать задание со статусом "Оценено" или "Пропущено"' : ''}
+        />
+      )}
+
+      {/* Модальное окно создания задания */}
+      {activeBook && (
+        <AssignmentEditModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          initialData={{
+            title: '',
+            pages: 0,
+            time: '20:00',
+            description: '',
+            chapter: null,
+            lastParagraph: ''
+          }}
+          onSubmit={handleCreateSubmit}
+          // Передаём режим из активной книги, чтобы ввод переключался между страницами и процентами
+          mode={activeBook.mode || 'page'}
+          isGraded={false}
+          isDeadlinePassed={false}
+          disabled={false}
         />
       )}
       

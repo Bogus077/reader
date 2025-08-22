@@ -38,6 +38,7 @@ const MentorLibrary: FC = () => {
                 author={book.author}
                 category={book.category}
                 difficulty={book.difficulty}
+                compact
               />
             ))}
           </div>

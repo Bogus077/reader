@@ -65,7 +65,7 @@ export const getMentorStudentCard = (id: number) =>
   api.get(`mentor/students/${id}`).json<{ 
     ok: true; 
     student: { id: number; name: string; timezone: string }; 
-    activeBook: { id: number; title: string; author: string; cover_url?: string } | null; 
+    activeBook: { id: number; title: string; author: string; cover_url?: string; student_book_id?: number; mode?: 'percent'|'page' } | null; 
     today: { assignment: Assignment | null }; 
     strips: Strip[]; 
     recentRatings: Array<{ date: string; rating: number; comment?: string }>; 
@@ -94,6 +94,17 @@ export const generateAssignments = (body: {
   endDate:string 
 }) =>
   api.post('mentor/assignments/generate', { json: body }).json<{ ok: true; created: number; skippedExisting: number }>();
+
+export const createAssignment = (body: {
+  student_book_id: number;
+  date: string; // YYYY-MM-DD
+  deadline_time: string; // HH:mm
+  target_percent?: number | null;
+  target_page?: number | null;
+  target_chapter?: string | null;
+  target_last_paragraph?: string | null;
+}) =>
+  api.post('mentor/assignments', { json: body }).json<{ ok: true; assignment: any }>();
 
 export const assignStudentBook = (body: { 
   student_id:number; 

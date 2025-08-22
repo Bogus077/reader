@@ -108,11 +108,11 @@ export const StudentProgress: FC = () => {
                     <RatingStars value={strip.rating} readOnly size="sm" />
                   </div>
                 )}
-                {strip.target && (
+                {strip.assignment?.target && (
                   <div style={{ marginLeft: 'auto', color: '#666' }}>
-                    {strip.target.percent ? `${strip.target.percent}%` : 
-                     strip.target.page ? `стр. ${strip.target.page}` : 
-                     strip.target.chapter || '—'}
+                    {strip.assignment.target.percent ? `${strip.assignment.target.percent}%` : 
+                     strip.assignment.target.page ? `стр. ${strip.assignment.target.page}` : 
+                     strip.assignment.target.chapter || '—'}
                   </div>
                 )}
               </div>

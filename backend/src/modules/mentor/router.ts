@@ -13,7 +13,7 @@ import { sequelize } from '../../lib/db';
 import dayjs from 'dayjs';
 import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
-import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema } from './schemas';
+import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema } from './schemas';
 
 const router = express.Router();
 
@@ -129,6 +129,45 @@ router.post('/assignments/generate', requireAuth, requireMentor, validateRequest
       ok: false,
       error: 'Internal server error'
     });
+  }
+});
+
+/**
+ * Создание одиночного задания
+ * POST /mentor/assignments
+ */
+router.post('/assignments', requireAuth, requireMentor, validateRequest(createAssignmentSchema), async (req, res) => {
+  try {
+    const { student_book_id, date, deadline_time, target_percent = null, target_page = null, target_chapter = null, target_last_paragraph = null } = req.body;
+
+    // Проверка существования книги студента
+    const studentBook = await StudentBook.findByPk(student_book_id);
+    if (!studentBook) {
+      return res.status(404).json({ ok: false, error: 'Student book not found' });
+    }
+
+    // Проверка дубликата задания на ту же дату
+    const existing = await Assignment.findOne({ where: { student_book_id, date } });
+    if (existing) {
+      return res.status(409).json({ ok: false, error: 'Assignment already exists for this date' });
+    }
+
+    // Создание задания
+    const assignment = await Assignment.create({
+      student_book_id,
+      date,
+      deadline_time,
+      target_percent,
+      target_page,
+      target_chapter,
+      target_last_paragraph,
+      status: 'pending'
+    });
+
+    return res.status(201).json({ ok: true, assignment });
+  } catch (error) {
+    console.error('Error creating assignment:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });
 
@@ -311,7 +350,9 @@ router.get('/students/:id', requireAuth, requireMentor, async (req, res) => {
           id: book.id,
           title: book.title,
           author: book.author,
-          cover_url: book.cover_url
+          cover_url: book.cover_url,
+          student_book_id: studentBook.id,
+          mode: studentBook.progress_mode
         };
       }
     }

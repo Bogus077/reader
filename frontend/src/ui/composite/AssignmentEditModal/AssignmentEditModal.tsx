@@ -50,6 +50,10 @@ export type AssignmentEditModalProps = {
    * Причина блокировки формы
    */
   disabledReason?: string;
+  /**
+   * Режим прогресса для задания: percent или page
+   */
+  mode?: 'percent' | 'page';
 };
 
 export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
@@ -61,6 +65,7 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   isDeadlinePassed = false,
   disabled = false,
   disabledReason = '',
+  mode = 'page',
 }) => {
   // Состояние для хранения данных формы
   const [formData, setFormData] = useState<AssignmentData>({
@@ -119,8 +124,15 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
       newErrors.title = "Название задания обязательно";
     }
     
-    if (formData.pages <= 0) {
-      newErrors.pages = "Количество страниц должно быть больше 0";
+    if (mode === 'page') {
+      if (!formData.pages || formData.pages <= 0) {
+        newErrors.pages = "Количество страниц должно быть больше 0";
+      }
+    } else {
+      const p = formData.percent ?? 0;
+      if (p <= 0 || p > 100) {
+        newErrors.percent = "Процент должен быть от 1 до 100";
+      }
     }
     
     if (!formData.time) {
@@ -164,15 +176,28 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
           required
         />
 
-        <NumberInput
-          label="Количество страниц"
-          value={formData.pages}
-          onChange={(value) => handleChange("pages", value as number)}
-          min={1}
-          error={errors.pages}
-          disabled={isDisabled}
-          required
-        />
+        {mode === 'page' ? (
+          <NumberInput
+            label="Количество страниц"
+            value={formData.pages}
+            onChange={(value) => handleChange("pages", value as number)}
+            min={1}
+            error={errors.pages}
+            disabled={isDisabled}
+            required
+          />
+        ) : (
+          <NumberInput
+            label="Процент выполнения, %"
+            value={formData.percent ?? 0}
+            onChange={(value) => handleChange("percent", value as number)}
+            min={1}
+            max={100}
+            error={errors.percent}
+            disabled={isDisabled}
+            required
+          />
+        )}
 
         <TimeInput
           label="Время выполнения"
