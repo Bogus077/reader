@@ -14,5 +14,8 @@ COPY . .
 # Открываем порт
 EXPOSE 3020
 
+# Добавляем переменные окружения
+ENV HOST=reader.sharkovv.ru
+
 # Запускаем сборку и preview на порту 3020
 CMD ["npm", "run", "docker-start"]

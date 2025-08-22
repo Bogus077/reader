@@ -12,3 +12,4 @@ services:
       - ./public:/app/public
     environment:
       - NODE_ENV=production
+      - HOST=reader.sharkovv.ru
