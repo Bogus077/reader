@@ -683,20 +683,32 @@ router.post('/assignments/:id/grade', requireAuth, requireMentor, validateReques
     
     // Уведомление студенту в Telegram о выставленной оценке
     try {
-      const tz = student.tz || 'Europe/Samara';
       let bookTitle = '';
       try {
         const book = await Book.findByPk(studentBook.book_id);
         if (book?.title) bookTitle = book.title;
       } catch {}
-      const commentLine = (mentor_comment !== undefined && mentor_comment !== null && String(mentor_comment).trim() !== '') ? `Комментарий: ${mentor_comment}` : null;
-      const stars = '★'.repeat(mentor_rating) + '☆'.repeat(5 - mentor_rating);
+      const formatRuDate = (val: any) => {
+        try {
+          if (val instanceof Date) {
+            return val.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+          }
+          const iso = String(val);
+          const [y, m, d] = iso.split('-').map(Number);
+          const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+          if (!y || !m || !d) return iso;
+          return `${d} ${months[m - 1]}`;
+        } catch { return String(val); }
+      };
+      const esc = (s: any) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const hasComment = (mentor_comment !== undefined && mentor_comment !== null && String(mentor_comment).trim() !== '');
+      const stars = '⭐'.repeat(mentor_rating) + '☆'.repeat(5 - mentor_rating);
       const msg = [
-        `📝 Вам поставлена оценка по заданию`,
-        `Дата задания: ${assignment.date}`,
-        bookTitle ? `Книга: ${bookTitle}` : null,
-        `Оценка: ${stars}`,
-        commentLine,
+        `<b>📝 Оценка по заданию</b>`,
+        `<b>Дата задания:</b> ${esc(formatRuDate(assignment.date))}`,
+        bookTitle ? `<b>Книга:</b> ${esc(bookTitle)}` : null,
+        `<b>Оценка:</b> ${stars}`,
+        hasComment ? `<b>Комментарий:</b> ${esc(mentor_comment)}` : null,
       ].filter(Boolean).join('\n');
       if (student.telegram_id) {
         await notifyUser(student.telegram_id, msg);
@@ -808,9 +820,10 @@ router.post('/student-books/assign', requireAuth, requireMentor, validateRequest
     
     // Уведомление студенту в Telegram о назначении новой книги
     try {
+      const esc = (s: any) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const msg = [
-        `📚 Вам назначена новая книга`,
-        `Книга: ${book.title}`,
+        `<b>📚 Назначена новая книга</b>`,
+        `<b>Книга:</b> ${esc(book.title)}`,
       ].filter(Boolean).join('\n');
       if (student.telegram_id) {
         await notifyUser(student.telegram_id, msg);

@@ -81,7 +81,13 @@ export const StudentProgress: FC = () => {
   }, [strips, isProgressLoading, isStripsLoading]);
 
   // Расчет процента выполнения
-  const progressPercent = progress ? Math.round((progress.daysDone / progress.daysTotal) * 100) : 0;
+  const progressPercent = (() => {
+    const done = Number(progress?.daysDone ?? 0);
+    const total = Number(progress?.daysTotal ?? 0);
+    if (!Number.isFinite(done) || !Number.isFinite(total) || total <= 0) return 0;
+    const pct = Math.round((done / total) * 100);
+    return Math.max(0, Math.min(100, pct));
+  })();
   
   // Название активной книги теперь приходит с backend в progress.bookTitle
   const bookTitle = progress?.bookTitle ?? null;
@@ -197,7 +203,9 @@ export const StudentProgress: FC = () => {
                 <Card className={styles.metricCard}>
                   <div className={styles.metricIcon} aria-hidden>⭐</div>
                   <div className={styles.metricValue}>{
-                    typeof progress?.avgRating === 'number' ? progress.avgRating.toFixed(2) : '—'
+                    Number.isFinite(progress?.avgRating as number)
+                      ? (progress!.avgRating as number).toFixed(2)
+                      : '—'
                   }</div>
                   <div className={styles.metricLabel}>Средняя оценка</div>
                 </Card>

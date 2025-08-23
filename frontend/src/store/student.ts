@@ -16,14 +16,26 @@ export const $strips = createStore<Strip[]>([]).on(loadStripsFx.doneData, (_, d)
 export const $progress = createStore<StudentProgress | null>(null)
   .on(loadProgressFx.doneData, (_, d) => (
     d.ok
-      ? {
-          currentStreak: d.currentStreak,
-          bestStreak: d.bestStreak,
-          avgRating: d.avgRating,
-          daysDone: d.daysDone,
-          daysTotal: d.daysTotal,
-          bookTitle: (d as any).bookTitle ?? null,
-        }
+      ? (() => {
+          const toInt = (v: any) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0;
+          };
+          const toNumberOrNaN = (v: any) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : NaN;
+          };
+          const daysTotal = toInt((d as any).daysTotal);
+          const daysDone = Math.min(toInt((d as any).daysDone), daysTotal);
+          return {
+            currentStreak: toInt((d as any).currentStreak),
+            bestStreak: toInt((d as any).bestStreak),
+            avgRating: toNumberOrNaN((d as any).avgRating),
+            daysDone,
+            daysTotal,
+            bookTitle: (d as any).bookTitle ?? null,
+          } as StudentProgress;
+        })()
       : null
   ));
 
