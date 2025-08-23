@@ -15,7 +15,7 @@ import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
 import Streak from '../streaks/model';
 import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema } from './schemas';
-import { notifyMentors } from '../../lib/telegram';
+import { notifyMentors, notifyUser } from '../../lib/telegram';
 
 const router = express.Router();
 
@@ -681,7 +681,7 @@ router.post('/assignments/:id/grade', requireAuth, requireMentor, validateReques
     // Обновляем лучший стрик студента на основе динамически вычисленного текущего стрика
     await updateBestStreakForStudent(studentBook.student_id, student.tz || 'Europe/Samara');
     
-    // Уведомление в Telegram о выставленной оценке
+    // Уведомление студенту в Telegram о выставленной оценке
     try {
       const tz = student.tz || 'Europe/Samara';
       let bookTitle = '';
@@ -689,21 +689,22 @@ router.post('/assignments/:id/grade', requireAuth, requireMentor, validateReques
         const book = await Book.findByPk(studentBook.book_id);
         if (book?.title) bookTitle = book.title;
       } catch {}
-      const ratedAt = nowInTz(tz).format('DD.MM.YYYY HH:mm');
-      const mentorName = req.user?.name ? `Ментор: ${req.user.name}` : null;
       const commentLine = (mentor_comment !== undefined && mentor_comment !== null && String(mentor_comment).trim() !== '') ? `Комментарий: ${mentor_comment}` : null;
+      const stars = '★'.repeat(mentor_rating) + '☆'.repeat(5 - mentor_rating);
       const msg = [
-        `📝 Оценено задание студента ${student.name}`,
+        `📝 Вам поставлена оценка по заданию`,
         `Дата задания: ${assignment.date}`,
         bookTitle ? `Книга: ${bookTitle}` : null,
-        `Оценка: ${mentor_rating}`,
+        `Оценка: ${stars}`,
         commentLine,
-        mentorName,
-        `Время: ${ratedAt} (${tz})`
       ].filter(Boolean).join('\n');
-      await notifyMentors(msg);
+      if (student.telegram_id) {
+        await notifyUser(student.telegram_id, msg);
+      } else {
+        console.warn('Student telegram_id is empty; skipping student notification');
+      }
     } catch (e) {
-      console.error('Telegram notify (mentor grade) error:', e);
+      console.error('Telegram notify (student grade) error:', e);
     }
     
     return res.json({
