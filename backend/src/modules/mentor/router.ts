@@ -806,23 +806,19 @@ router.post('/student-books/assign', requireAuth, requireMentor, validateRequest
       return newStudentBook;
     });
     
-    // Уведомление в Telegram о назначении новой книги студенту
+    // Уведомление студенту в Telegram о назначении новой книги
     try {
-      const tz = student.tz || 'Europe/Samara';
-      const mentorName = req.user?.name ? `Ментор: ${req.user.name}` : null;
-      const startStr = dayjs(start_date).isValid() ? dayjs(start_date).format('DD.MM.YYYY') : String(start_date);
-      const assignedAt = nowInTz(tz).format('DD.MM.YYYY HH:mm');
       const msg = [
-        `📚 Назначена книга студенту ${student.name}`,
+        `📚 Вам назначена новая книга`,
         `Книга: ${book.title}`,
-        `Режим прогресса: ${progress_mode}`,
-        `Дата начала: ${startStr}`,
-        mentorName,
-        `Время: ${assignedAt} (${tz})`
       ].filter(Boolean).join('\n');
-      await notifyMentors(msg);
+      if (student.telegram_id) {
+        await notifyUser(student.telegram_id, msg);
+      } else {
+        console.warn('Student telegram_id is empty; skipping student notification (assign book)');
+      }
     } catch (e) {
-      console.error('Telegram notify (assign book) error:', e);
+      console.error('Telegram notify (assign book to student) error:', e);
     }
     
     return res.json({
