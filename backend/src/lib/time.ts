@@ -69,15 +69,17 @@ export function resolveVisualStatus(
   }
   
   const today = todayStr(tz);
-  const assignmentDate = assignment.date;
+  const assignmentDateStr = dayjs(assignment.date).format(DATE_FMT);
+  const isPastDay = dayjs.tz(assignmentDateStr, tz).isBefore(dayjs.tz(today, tz), 'day');
+  const isSameDay = assignmentDateStr === today;
   
   // Если дата задания в прошлом, считаем его пропущенным
-  if (assignmentDate < today) {
+  if (isPastDay) {
     return 'missed';
   }
   
   // Если сегодня и дедлайн прошел, считаем задание пропущенным
-  if (assignmentDate === today && hasPassedDeadline(assignmentDate, assignment.deadline_time, tz)) {
+  if (isSameDay && hasPassedDeadline(assignmentDateStr, assignment.deadline_time, tz)) {
     return 'missed';
   }
   

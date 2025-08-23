@@ -187,6 +187,46 @@ export async function listAssignmentsForActive(studentId: number): Promise<{ sb:
 }
 
 /**
+ * Получить задания студента за последние STREAK_WINDOW_DAYS дней по всем его книгам
+ * @param studentId ID студента
+ * @returns Массив заданий с Recap по всем книгам
+ */
+export async function listRecentAssignmentsForStudent(studentId: number): Promise<AssignmentWithRecap[]> {
+  try {
+    const STREAK_WINDOW_DAYS = 90;
+    const startDate = dayjs().subtract(STREAK_WINDOW_DAYS, 'day').format(DATE_FMT);
+
+    const assignments = await Assignment.findAll({
+      where: {
+        date: {
+          [Op.gte]: startDate
+        }
+      },
+      include: [
+        {
+          model: StudentBook,
+          as: 'studentBook',
+          required: true,
+          where: { student_id: studentId },
+          attributes: ['id', 'student_id']
+        },
+        {
+          model: Recap,
+          as: 'recap',
+          required: false
+        }
+      ],
+      order: [['date', 'ASC']]
+    }) as unknown as AssignmentWithRecap[];
+
+    return assignments;
+  } catch (error) {
+    console.error('Error listing assignments for student:', error);
+    return [];
+  }
+}
+
+/**
  * Построить массив дневных сегментов (полосочек) для студента
  * @param studentId ID студента
  * @param tz Временная зона студента
@@ -279,13 +319,31 @@ export async function buildStrips(studentId: number, tz: string): Promise<Strip[
  * @returns Количество дней в текущей серии
  */
 export async function computeCurrentStreak(studentId: number, tz: string): Promise<number> {
-  const { sb, items } = await listAssignmentsForActive(studentId);
-  if (!sb || items.length === 0) return 0;
+  const items = await listRecentAssignmentsForStudent(studentId);
+  if (items.length === 0) return 0;
   const today = todayStr(tz);
   // быстрый доступ по дате
-  const map = new Map<string, { a: Assignment; rating?: number }>();
+  const map = new Map<string, { a: Assignment }>();
   for (const a of items) {
-    map.set((a as any).date, { a, rating: (a as any).Recap?.mentor_rating });
+    const key = dayjs(a.date).format(DATE_FMT);
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, { a });
+      continue;
+    }
+    // Если уже есть graded — он приоритетен, не меняем
+    if ((existing.a as any).status === 'graded') {
+      continue;
+    }
+    // Если новое graded — заменяем
+    if ((a as any).status === 'graded') {
+      map.set(key, { a });
+      continue;
+    }
+    // Иначе оставляем задание с более поздним дедлайном (важно для «сегодня после дедлайна=0»)
+    if ((a as any).deadline_time > (existing.a as any).deadline_time) {
+      map.set(key, { a });
+    }
   }
   // стартуем с сегодня, но учитываем дедлайн
   let streak = 0;

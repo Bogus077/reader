@@ -1,6 +1,6 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -35,7 +35,7 @@
   padding: 48px 16px;
   color: #666;
   text-align: center;
-  
+
   svg {
     margin-bottom: 16px;
     color: #999;

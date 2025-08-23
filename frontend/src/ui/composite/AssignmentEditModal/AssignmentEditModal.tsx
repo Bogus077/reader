@@ -15,7 +15,7 @@ export type AssignmentData = {
   lastParagraph?: string | null;
   percent?: number | null;
   date?: string | null; // YYYY-MM-DD
-  mode?: 'percent' | 'page';
+  mode?: "percent" | "page";
 };
 
 export type AssignmentEditModalProps = {
@@ -54,7 +54,7 @@ export type AssignmentEditModalProps = {
   /**
    * Режим прогресса для задания: percent или page
    */
-  mode?: 'percent' | 'page';
+  mode?: "percent" | "page";
   /**
    * Показать выбор даты (обычно для создания задания)
    */
@@ -77,8 +77,8 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   isGraded = false,
   isDeadlinePassed = false,
   disabled = false,
-  disabledReason = '',
-  mode = 'page',
+  disabledReason = "",
+  mode = "page",
   showDate = false,
   allowModeSwitch = false,
   isEdit = false,
@@ -86,7 +86,7 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   // Состояние для хранения данных формы
   const [formData, setFormData] = useState<AssignmentData>({
     pages: initialData.pages || 0,
-    time: initialData.time || "12:00",
+    time: initialData.time || "14:00",
     chapter: initialData.chapter || null,
     lastParagraph: initialData.lastParagraph || null,
     percent: initialData.percent || null,
@@ -95,22 +95,24 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   });
 
   // Состояние для хранения ошибок валидации
-  const [errors, setErrors] = useState<Partial<Record<keyof AssignmentData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof AssignmentData, string>>
+  >({});
 
   // Определяем, должна ли форма быть заблокирована
   const isDisabled = isGraded || disabled;
 
   // Сообщение о причине блокировки формы
-  const disabledMessage = disabledReason || (isGraded 
-    ? "Задание уже оценено и не может быть изменено" 
-    : "");
+  const disabledMessage =
+    disabledReason ||
+    (isGraded ? "Задание уже оценено и не может быть изменено" : "");
 
   // Обновляем данные формы при изменении initialData
   useEffect(() => {
     if (initialData) {
       setFormData({
         pages: initialData.pages || 0,
-        time: initialData.time || "12:00",
+        time: initialData.time || "14:00",
         chapter: initialData.chapter || null,
         lastParagraph: initialData.lastParagraph || null,
         percent: initialData.percent || null,
@@ -121,9 +123,12 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   }, [initialData, mode]);
 
   // Обработчики изменения полей формы
-  const handleChange = <K extends keyof AssignmentData>(field: K, value: AssignmentData[K]) => {
+  const handleChange = <K extends keyof AssignmentData>(
+    field: K,
+    value: AssignmentData[K]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    
+
     // Очищаем ошибку при изменении поля
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -133,9 +138,11 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   // Валидация формы
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof AssignmentData, string>> = {};
-    const currentMode: 'percent' | 'page' = allowModeSwitch ? (formData.mode || mode) : mode;
-    
-    if (currentMode === 'page') {
+    const currentMode: "percent" | "page" = allowModeSwitch
+      ? formData.mode || mode
+      : mode;
+
+    if (currentMode === "page") {
       if (!formData.pages || formData.pages <= 0) {
         newErrors.pages = "Количество страниц должно быть больше 0";
       }
@@ -145,7 +152,7 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
         newErrors.percent = "Процент должен быть от 1 до 100";
       }
     }
-    
+
     if (!formData.time) {
       newErrors.time = "Время выполнения обязательно";
     }
@@ -153,7 +160,7 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
     if (showDate && !formData.date) {
       newErrors.date = "Дата обязательна";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -161,7 +168,9 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
   // Обработчик отправки формы
   const handleSubmit = () => {
     if (validateForm()) {
-      const currentMode: 'percent' | 'page' = allowModeSwitch ? (formData.mode || mode) : mode;
+      const currentMode: "percent" | "page" = allowModeSwitch
+        ? formData.mode || mode
+        : mode;
       onSubmit({ ...formData, mode: currentMode });
       onClose();
     }
@@ -173,11 +182,9 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
         <h2 className={styles.title}>
           {isEdit ? "Редактирование задания" : "Новое задание"}
         </h2>
-        
+
         {isDisabled && (
-          <div className={styles.disabledWarning}>
-            {disabledMessage}
-          </div>
+          <div className={styles.disabledWarning}>{disabledMessage}</div>
         )}
         {!isDisabled && isDeadlinePassed && (
           <div className={styles.disabledWarning}>
@@ -192,11 +199,13 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
             name="target-mode"
             label="Режим цели"
             options={[
-              { value: 'page', label: 'Страницы' },
-              { value: 'percent', label: 'Проценты' },
+              { value: "page", label: "Страницы" },
+              { value: "percent", label: "Проценты" },
             ]}
             value={(formData.mode || mode) as string}
-            onChange={(e) => handleChange('mode', e.target.value as 'percent' | 'page')}
+            onChange={(e) =>
+              handleChange("mode", e.target.value as "percent" | "page")
+            }
             disabled={isDisabled}
             required
           />
@@ -205,15 +214,17 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
         {showDate && (
           <DateInput
             label="Дата"
-            value={formData.date || ''}
-            onChange={(value) => handleChange('date', value)}
+            value={formData.date || ""}
+            onChange={(value) => handleChange("date", value)}
             error={errors.date}
             disabled={isDisabled}
             required
           />
         )}
 
-        {(allowModeSwitch ? (formData.mode || mode) === 'page' : mode === 'page') ? (
+        {(
+          allowModeSwitch ? (formData.mode || mode) === "page" : mode === "page"
+        ) ? (
           <NumberInput
             label="Количество страниц"
             value={formData.pages}
@@ -248,30 +259,27 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
         <NumberInput
           label="Глава"
           value={formData.chapter ?? 0}
-          onChange={(value) => handleChange("chapter", (value as number) || null)}
+          onChange={(value) =>
+            handleChange("chapter", (value as number) || null)
+          }
           min={0}
           disabled={isDisabled}
         />
 
         <Textarea
           label="Текст параграфа"
-          value={formData.lastParagraph || ''}
+          value={formData.lastParagraph || ""}
           onChange={(e) => handleChange("lastParagraph", e.target.value)}
           placeholder="Введите текст параграфа"
           disabled={isDisabled}
         />
-
-        
       </div>
 
       <div className={styles.actions}>
         <Button variant="ghost" onClick={onClose}>
           Отмена
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isDisabled}
-        >
+        <Button onClick={handleSubmit} disabled={isDisabled}>
           Сохранить
         </Button>
       </div>
