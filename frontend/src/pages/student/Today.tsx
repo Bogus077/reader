@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import styles from "./Today.module.scss";
 import {
@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "../../ui";
 import { toast } from "../../ui/feedback/Toast";
+import { Modal } from "../../ui/feedback/Modal";
 import { useUnit } from "effector-react";
 import {
   $today,
@@ -49,6 +50,10 @@ export default function StudentToday() {
   const loadAssignmentByDate = useUnit(loadAssignmentByDateFx);
   const navigate = useNavigate();
   const user = useUnit($user);
+
+  // Состояние модалки подтверждения
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     load();
@@ -196,6 +201,52 @@ export default function StudentToday() {
       : null;
   })();
 
+  // Человекочитаемая дата/время сдачи с учётом часового пояса пользователя
+  const submittedAtText = (() => {
+    if (!today?.submitted_at) return null;
+    try {
+      const d = new Date(today.submitted_at);
+      const date = d.toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: tz,
+      });
+      const time = d.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: tz,
+      });
+      return `${date}, ${time}`;
+    } catch {
+      return today.submitted_at as any;
+    }
+  })();
+
+  // Подтверждение «Отметить как прочитано»
+  const handleConfirmSubmit = async () => {
+    if (!today) return;
+    setIsSubmitting(true);
+    try {
+      await submit(today.id);
+      await load();
+      await loadStrips();
+      toast.success("Отмечено!");
+    } catch (error) {
+      toast.error("Не удалось отправить");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  // Закрытие модалки: блокируем во время отправки
+  const handleModalClose = () => {
+    if (isSubmitting) return;
+    setConfirmOpen(false);
+  };
+
   return (
     <>
       <Topbar title="Сегодня" />
@@ -288,14 +339,14 @@ export default function StudentToday() {
               )}
 
               {today.status === "submitted" && (
-                <div className={clsx("hstack", styles.rowMt12)}>
+                <div
+                  className={clsx("hstack", styles.rowMt12, styles.rowDoneAt)}
+                >
                   <Badge tone="success" soft>
                     Сдано
                   </Badge>
                   {today.submitted_at && (
-                    <span className={styles.grayText}>
-                      Сдано: {today.submitted_at}
-                    </span>
+                    <span className={styles.grayText}>{submittedAtText}</span>
                   )}
                 </div>
               )}
@@ -325,17 +376,7 @@ export default function StudentToday() {
               {visualStatus === "pending" && (
                 <Button
                   variant="success"
-                  onClick={async () => {
-                    try {
-                      await submit(today.id);
-                      await load();
-                      await loadStrips();
-                      toast.success("Отмечено!");
-                    } catch (error) {
-                      toast.error("Не удалось отправить");
-                      console.error(error);
-                    }
-                  }}
+                  onClick={() => setConfirmOpen(true)}
                   fullWidth
                 >
                   <span className={clsx("hstack", styles.row)}>
@@ -348,6 +389,27 @@ export default function StudentToday() {
             <div className={styles.grayText}>На сегодня заданий нет</div>
           )}
         </Card>
+
+        {/* Модалка подтверждения отметки */}
+        <Modal isOpen={isConfirmOpen} onClose={handleModalClose}>
+          <div>
+            <h3>Подтверждение</h3>
+            <p>Отметить задание как прочитано?</p>
+          </div>
+          <div className={clsx("hstack", styles.rowMt12)}>
+            <Button
+              variant="ghost"
+              onClick={handleModalClose}
+              disabled={isSubmitting}
+            >
+              Отмена
+            </Button>
+            <div className={styles.mlAuto} />
+            <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Отмечаем…" : "Да, отметить"}
+            </Button>
+          </div>
+        </Modal>
 
         {isProgressLoading ? (
           <>

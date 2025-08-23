@@ -15,6 +15,7 @@ import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
 import Streak from '../streaks/model';
 import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema } from './schemas';
+import { notifyMentors } from '../../lib/telegram';
 
 const router = express.Router();
 
@@ -680,6 +681,31 @@ router.post('/assignments/:id/grade', requireAuth, requireMentor, validateReques
     // Обновляем лучший стрик студента на основе динамически вычисленного текущего стрика
     await updateBestStreakForStudent(studentBook.student_id, student.tz || 'Europe/Samara');
     
+    // Уведомление в Telegram о выставленной оценке
+    try {
+      const tz = student.tz || 'Europe/Samara';
+      let bookTitle = '';
+      try {
+        const book = await Book.findByPk(studentBook.book_id);
+        if (book?.title) bookTitle = book.title;
+      } catch {}
+      const ratedAt = nowInTz(tz).format('DD.MM.YYYY HH:mm');
+      const mentorName = req.user?.name ? `Ментор: ${req.user.name}` : null;
+      const commentLine = (mentor_comment !== undefined && mentor_comment !== null && String(mentor_comment).trim() !== '') ? `Комментарий: ${mentor_comment}` : null;
+      const msg = [
+        `📝 Оценено задание студента ${student.name}`,
+        `Дата задания: ${assignment.date}`,
+        bookTitle ? `Книга: ${bookTitle}` : null,
+        `Оценка: ${mentor_rating}`,
+        commentLine,
+        mentorName,
+        `Время: ${ratedAt} (${tz})`
+      ].filter(Boolean).join('\n');
+      await notifyMentors(msg);
+    } catch (e) {
+      console.error('Telegram notify (mentor grade) error:', e);
+    }
+    
     return res.json({
       ok: true
     });
@@ -778,6 +804,25 @@ router.post('/student-books/assign', requireAuth, requireMentor, validateRequest
       
       return newStudentBook;
     });
+    
+    // Уведомление в Telegram о назначении новой книги студенту
+    try {
+      const tz = student.tz || 'Europe/Samara';
+      const mentorName = req.user?.name ? `Ментор: ${req.user.name}` : null;
+      const startStr = dayjs(start_date).isValid() ? dayjs(start_date).format('DD.MM.YYYY') : String(start_date);
+      const assignedAt = nowInTz(tz).format('DD.MM.YYYY HH:mm');
+      const msg = [
+        `📚 Назначена книга студенту ${student.name}`,
+        `Книга: ${book.title}`,
+        `Режим прогресса: ${progress_mode}`,
+        `Дата начала: ${startStr}`,
+        mentorName,
+        `Время: ${assignedAt} (${tz})`
+      ].filter(Boolean).join('\n');
+      await notifyMentors(msg);
+    } catch (e) {
+      console.error('Telegram notify (assign book) error:', e);
+    }
     
     return res.json({
       ok: true,

@@ -2,6 +2,10 @@
   margin-bottom: 12px;
 }
 
+.rowDoneAt {
+  justify-content: space-between;
+}
+
 .skeletonGrid {
   display: grid;
   gap: 8px;
@@ -39,7 +43,7 @@
 }
 
 .grayText {
-  color: var(--gray-700);
+  color: var(--gray-500);
 }
 
 .mlAuto {

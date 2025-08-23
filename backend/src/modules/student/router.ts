@@ -8,6 +8,8 @@ import Assignment from '../assignments/model';
 import Book from '../books/model';
 import { Op } from 'sequelize';
 import StudentBook from '../studentBooks/model';
+import User from '../users/model';
+import { notifyMentors } from '../../lib/telegram';
 
 // Используем require для dayjs и его плагинов, так как нет типов
 const dayjs = require('dayjs');
@@ -282,6 +284,30 @@ router.post('/assignment/:id/submit', async (req, res) => {
       status: 'submitted',
       submitted_at: new Date()
     });
+    
+    // Отправляем уведомление в Telegram (не блокируем основной ответ)
+    try {
+      const tz = req.user.tz || 'Europe/Samara';
+      let studentName = `ID ${studentId}`;
+      try {
+        const student = await User.findByPk(studentId);
+        if (student?.name) studentName = student.name;
+      } catch {}
+      let bookTitle = '';
+      try {
+        const book = await Book.findByPk(studentBook.book_id);
+        if (book?.title) bookTitle = book.title;
+      } catch {}
+      const submittedTime = dayjs().tz(tz).format('DD.MM.YYYY HH:mm');
+      const msg = [
+        `✅ Студент ${studentName} отметил задание за ${assignment.date} как выполненное`,
+        bookTitle ? `Книга: ${bookTitle}` : null,
+        `Время: ${submittedTime} (${tz})`
+      ].filter(Boolean).join('\n');
+      await notifyMentors(msg);
+    } catch (e) {
+      console.error('Telegram notify (student submit) error:', e);
+    }
     
     return res.json({
       ok: true
