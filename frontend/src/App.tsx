@@ -8,6 +8,7 @@ import MentorDashboard from "./pages/mentor/Dashboard";
 import MentorStudentCard from "./pages/mentor/StudentCard";
 import MentorLibrary from "./pages/mentor/Library";
 import MentorAddBook from "./pages/mentor/AddBook";
+import MentorStudentLogs from "./pages/mentor/StudentLogs";
 import UIPrimitives from "./pages/ui-demo/Primitives";
 import UIData from "./pages/ui-demo/Data";
 import UIFeedback from "./pages/ui-demo/Feedback";
@@ -78,6 +79,7 @@ export default function App() {
         {/* Менторские маршруты */}
         <Route path="/mentor" element={<MentorDashboard />} />
         <Route path="/mentor/student/:id" element={<MentorStudentCard />} />
+        <Route path="/mentor/student/:id/logs" element={<MentorStudentLogs />} />
         <Route path="/mentor/library" element={<MentorLibrary />} />
         <Route path="/mentor/books/add" element={<MentorAddBook />} />
 

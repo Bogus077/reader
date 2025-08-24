@@ -37,3 +37,12 @@ export interface StudentProgress {
   daysTotal: number;
   bookTitle?: string | null;
 }
+
+export type LogAction = 'progress_open' | 'history_open' | 'today_open' | 'library_open';
+
+export interface StudentLog {
+  id: number;
+  action: LogAction;
+  metadata: any;
+  createdAt: string; // ISO
+}

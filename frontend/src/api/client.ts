@@ -1,5 +1,5 @@
 import ky from 'ky';
-import { Assignment, Strip, StudentProgress } from './types';
+import { Assignment, Strip, StudentProgress, StudentLog } from './types';
 
 export const api = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL,
@@ -148,6 +148,14 @@ export const getMentorStudentAssignments = (
 ) => api
   .get(`mentor/students/${studentId}/assignments`, { searchParams: params as any })
   .json<{ ok: boolean; assignments: Assignment[] }>();
+
+// Mentor: student logs
+export const getMentorStudentLogs = (
+  studentId: number,
+  params?: { limit?: number; offset?: number }
+) => api
+  .get(`mentor/students/${studentId}/logs`, { searchParams: params as any })
+  .json<{ ok: boolean; logs: StudentLog[] }>();
 
 // LOGS
 export const postLog = (

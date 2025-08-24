@@ -7,6 +7,7 @@ import StudentBook from '../studentBooks/model';
 import Book from '../books/model';
 import Assignment from '../assignments/model';
 import Recap from '../recaps/model';
+import Log from '../logs/model';
 import { Op, Transaction } from 'sequelize';
 import { DATE_FMT, nowInTz, todayStr, hasPassedDeadline, resolveVisualStatus } from '../../lib/time';
 import { sequelize } from '../../lib/db';
@@ -951,6 +952,51 @@ router.post('/books', requireAuth, requireMentor, validateRequest(createBookSche
     return res.status(201).json({ ok: true, book });
   } catch (error) {
     console.error('Error creating book:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Получить список логов студента
+ * GET /mentor/students/:id/logs?limit=50&offset=0
+ */
+router.get('/students/:id/logs', requireAuth, requireMentor, async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.id);
+    if (isNaN(studentId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid student ID' });
+    }
+
+    // Проверим, что студент существует
+    const student = await User.findOne({ where: { id: studentId, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    // Параметры пагинации
+    const { limit: limitRaw, offset: offsetRaw } = req.query as { limit?: string; offset?: string };
+    let limit = limitRaw ? parseInt(String(limitRaw)) : 50;
+    let offset = offsetRaw ? parseInt(String(offsetRaw)) : 0;
+    if (isNaN(limit) || limit <= 0 || limit > 200) limit = 50;
+    if (isNaN(offset) || offset < 0) offset = 0;
+
+    const logs = await Log.findAll({
+      where: { user_id: studentId },
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+
+    const items = logs.map((l) => ({
+      id: l.id,
+      action: l.action,
+      metadata: l.metadata,
+      createdAt: l.createdAt,
+    }));
+
+    return res.json({ ok: true, logs: items });
+  } catch (error) {
+    console.error('Error fetching student logs:', error);
     return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });

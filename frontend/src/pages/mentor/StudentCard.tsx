@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { Topbar } from "../../ui/primitives/Topbar";
 import { InfoCallout, Tabbar } from "../../ui";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useUnit } from "effector-react";
 import {
   $studentData,
@@ -45,6 +45,7 @@ import {
   CalendarRange,
   BookPlus,
   CalendarPlus,
+  List,
 } from "lucide-react";
 import styles from "./StudentCard.module.scss";
 import {
@@ -652,6 +653,12 @@ export const MentorStudentCard: FC = () => {
                     <Calendar size={16} style={{ marginRight: "8px" }} />
                     Добавить задание
                   </Button>
+                  <Link to={`/mentor/student/${id}/logs`}>
+                    <Button variant="secondary">
+                      <List size={16} style={{ marginRight: "8px" }} />
+                      Журнал действий
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
