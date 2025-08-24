@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useUnit } from "effector-react";
 import { format, parseISO, isValid } from "date-fns";
@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
+  CheckCircle2,
   XCircle,
   Clock,
 } from "lucide-react";
@@ -18,13 +19,17 @@ import {
   Button,
   RatingStars,
   Skeleton,
+  Modal,
+  InfoCallout,
 } from "../../ui";
+import { toast } from "../../ui/feedback/Toast";
 import clsx from "clsx";
 import {
   $strips,
   $assignmentByDate,
   loadStripsFx,
   loadAssignmentByDateFx,
+  submitFx,
 } from "../../store/student";
 import {
   resolveVisualStatus,
@@ -121,12 +126,17 @@ export const DayHistory: FC = () => {
   const date = searchParams.get("date");
 
   const [strips, assignmentByDate] = useUnit([$strips, $assignmentByDate]);
-  const [loadStrips, loadAssignmentByDate] = useUnit([
+  const [loadStrips, loadAssignmentByDate, submit] = useUnit([
     loadStripsFx,
     loadAssignmentByDateFx,
+    submitFx,
   ]);
   const isStripsLoading = useUnit(loadStripsFx.pending);
   const isAssignmentLoading = useUnit(loadAssignmentByDateFx.pending);
+
+  // Состояние модалки подтверждения
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Редирект на главную, если дата не указана или некорректна
   useEffect(() => {
@@ -169,6 +179,41 @@ export const DayHistory: FC = () => {
     // Находим сегмент в исходных данных
     return strips.find((strip) => strip.date === date);
   }, [strips, date]);
+
+  // Выбранное задание для дня
+  const dayAssignment = assignmentByDate || currentStrip?.assignment;
+
+  // Нужно ли показывать кнопку «Отметить как прочитано»
+  const showMarkButton = useMemo(() => {
+    if (!dayAssignment) return false;
+    if (dayAssignment.status === "submitted") return false;
+    const vs = resolveVisualStatus(dayAssignment, "+03:00");
+    return vs === "pending" || vs === "missed";
+  }, [dayAssignment]);
+
+  // Подтверждение «Отметить как прочитано»
+  const handleConfirmSubmit = async () => {
+    if (!dayAssignment) return;
+    setIsSubmitting(true);
+    try {
+      await submit(dayAssignment.id);
+      if (date) await loadAssignmentByDate(date);
+      await loadStrips();
+      toast.success("Отмечено!");
+    } catch (error) {
+      toast.error("Не удалось отправить");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  // Закрытие модалки: блокируем во время отправки
+  const handleModalClose = () => {
+    if (isSubmitting) return;
+    setConfirmOpen(false);
+  };
 
   // Находим индексы предыдущего и следующего дней
   const { prevDate, nextDate } = useMemo(() => {
@@ -261,15 +306,6 @@ export const DayHistory: FC = () => {
                 </div>
               )}
 
-              {assignmentByDate?.target?.last_paragraph && (
-                <div className={styles.infoRow}>
-                  <div className={styles.label}>Последний абзац:</div>
-                  <div className={styles.value}>
-                    "{assignmentByDate.target.last_paragraph}"
-                  </div>
-                </div>
-              )}
-
               {/* Поддержка двух вариантов дедлайна */}
               {(() => {
                 // Формируем ISO строку из даты и времени дедлайна
@@ -287,6 +323,37 @@ export const DayHistory: FC = () => {
                   </div>
                 ) : null;
               })()}
+
+              {assignmentByDate?.target?.last_paragraph && (
+                <div className={styles.lastParagraph}>
+                  <InfoCallout
+                    title="Последний абзац"
+                    description={assignmentByDate.target.last_paragraph}
+                    tone="info"
+                  />
+                </div>
+              )}
+
+              {/* Кнопка отметки как прочитанного для пропущенных/ожидающих дней */}
+              {showMarkButton && (
+                <div style={{ marginTop: 12 }}>
+                  <Button
+                    variant="success"
+                    onClick={() => setConfirmOpen(true)}
+                    fullWidth
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <CheckCircle2 size={18} /> Отметить как прочитано
+                    </span>
+                  </Button>
+                </div>
+              )}
             </>
           ) : currentStrip ? (
             <div>
@@ -318,6 +385,26 @@ export const DayHistory: FC = () => {
                   })()}
                 </div>
               </div>
+              {/* Кнопка, если нет подробного assignmentByDate, но статус позволяет */}
+              {showMarkButton && (
+                <div style={{ marginTop: 12 }}>
+                  <Button
+                    variant="success"
+                    onClick={() => setConfirmOpen(true)}
+                    fullWidth
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <CheckCircle size={18} /> Отметить как прочитано
+                    </span>
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div>Информация о задании не найдена</div>
@@ -383,6 +470,33 @@ export const DayHistory: FC = () => {
           </Button>
         </div>
       </div>
+      {/* Модалка подтверждения отметки */}
+      <Modal isOpen={isConfirmOpen} onClose={handleModalClose}>
+        <div>
+          <h3>Подтверждение</h3>
+          <p>Отметить задание как прочитано?</p>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            marginTop: 12,
+          }}
+        >
+          <Button
+            variant="ghost"
+            onClick={handleModalClose}
+            disabled={isSubmitting}
+          >
+            Отмена
+          </Button>
+          <div style={{ marginLeft: "auto" }} />
+          <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Отмечаем…" : "Да, отметить"}
+          </Button>
+        </div>
+      </Modal>
       <Tabbar />
     </div>
   );

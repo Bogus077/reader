@@ -299,22 +299,23 @@ export default function StudentToday() {
                 tone="info"
               />
 
-              {visualStatus === "pending" && (
-                <div className={clsx("hstack", styles.rowMt12)}>
-                  <Clock size={16} color="var(--danger)" />
-                  <span className={styles.danger}>
-                    Сдать до {today.deadline_time}
-                  </span>
-                  <div className={styles.mlAuto}>
-                    <DeadlineTimer
-                      date={today.date}
-                      time={today.deadline_time}
-                      tz={tz}
-                      status={visualStatus}
-                    />
+              {visualStatus === "pending" ||
+                (visualStatus === "missed" && (
+                  <div className={clsx("hstack", styles.rowMt12)}>
+                    <Clock size={16} color="var(--danger)" />
+                    <span className={styles.danger}>
+                      Сдать до {today.deadline_time}
+                    </span>
+                    <div className={styles.mlAuto}>
+                      <DeadlineTimer
+                        date={today.date}
+                        time={today.deadline_time}
+                        tz={tz}
+                        status={visualStatus}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
               {enrichedToday?.mentor_rating != null &&
                 !Number.isNaN(Number(enrichedToday.mentor_rating as any)) && (
                   <div className={clsx("hstack", styles.rowMt12)}>
@@ -373,17 +374,18 @@ export default function StudentToday() {
 
               <div className={styles.h8} />
 
-              {visualStatus === "pending" && (
-                <Button
-                  variant="success"
-                  onClick={() => setConfirmOpen(true)}
-                  fullWidth
-                >
-                  <span className={clsx("hstack", styles.row)}>
-                    <CheckCircle2 size={18} /> Отметить как прочитано
-                  </span>
-                </Button>
-              )}
+              {visualStatus === "pending" ||
+                (visualStatus === "missed" && (
+                  <Button
+                    variant="success"
+                    onClick={() => setConfirmOpen(true)}
+                    fullWidth
+                  >
+                    <span className={clsx("hstack", styles.row)}>
+                      <CheckCircle2 size={18} /> Отметить как прочитано
+                    </span>
+                  </Button>
+                ))}
             </>
           ) : (
             <div className={styles.grayText}>На сегодня заданий нет</div>
