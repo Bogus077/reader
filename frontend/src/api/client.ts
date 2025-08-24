@@ -148,3 +148,9 @@ export const getMentorStudentAssignments = (
 ) => api
   .get(`mentor/students/${studentId}/assignments`, { searchParams: params as any })
   .json<{ ok: boolean; assignments: Assignment[] }>();
+
+// LOGS
+export const postLog = (
+  action: 'progress_open' | 'history_open' | 'today_open' | 'library_open',
+  metadata?: any
+) => api.post('logs', { json: { action, metadata } }).json<{ ok: boolean }>();

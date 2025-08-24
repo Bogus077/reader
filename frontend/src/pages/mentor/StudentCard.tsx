@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
 import { Topbar } from "../../ui/primitives/Topbar";
-import { Tabbar } from "../../ui";
+import { InfoCallout, Tabbar } from "../../ui";
 import { useParams } from "react-router-dom";
 import { useUnit } from "effector-react";
 import {
@@ -554,6 +554,13 @@ export const MentorStudentCard: FC = () => {
                               {current.description}
                             </div>
                           </div>
+                        )}
+                        {current.target?.last_paragraph && (
+                          <InfoCallout
+                            title="Последний абзац"
+                            description={current.target.last_paragraph}
+                            tone="info"
+                          />
                         )}
                       </>
                     ) : (

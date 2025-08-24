@@ -5,6 +5,7 @@ import { Topbar, Tabbar, BookCard } from '../../ui';
 import { $booksAvailable, loadBooksAvailableFx, $currentBook, loadCurrentBookFx, $finishedBookIds, loadFinishedBooksFx } from '../../store/student';
 import styles from './Library.module.scss';
 import { LibraryFilters } from './LibraryFilters';
+import { postLog } from '../../api/client';
 
 export const StudentLibrary: FC = () => {
   const books = useUnit($booksAvailable);
@@ -18,6 +19,7 @@ export const StudentLibrary: FC = () => {
     loadBooks();
     loadCurrent();
     loadFinished();
+    void postLog('library_open');
   }, [loadBooks, loadCurrent, loadFinished]);
 
   const [query, setQuery] = useState('');

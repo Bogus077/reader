@@ -48,8 +48,19 @@
 }
 
 .selected {
-  box-shadow: 0 0 0 2px var(--primary);
-  transform: scaleY(1.15);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 100%;
+    background-color: var(--bg);
+  }
 }
 
 @media (max-width: 768px) {

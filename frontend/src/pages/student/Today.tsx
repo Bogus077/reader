@@ -36,6 +36,7 @@ import {
 } from "../../lib/visualStatus";
 import { Strip } from "../../api/types";
 import { ClipboardList, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { postLog } from "../../api/client";
 
 export default function StudentToday() {
   const [today, strips, progress] = useUnit([$today, $strips, $progress]);
@@ -59,6 +60,7 @@ export default function StudentToday() {
     load();
     loadStrips();
     loadProgress();
+    void postLog("today_open");
   }, []);
 
   // Догружаем полные данные задания по дате, если нет оценки/комментария

@@ -4,6 +4,7 @@ import StudentBook from '../modules/studentBooks/model';
 import Assignment from '../modules/assignments/model';
 import Recap from '../modules/recaps/model';
 import Streak from '../modules/streaks/model';
+import Log from '../modules/logs/model';
 
 User.hasMany(StudentBook, { foreignKey: 'student_id' });
 StudentBook.belongsTo(User, { foreignKey: 'student_id' });
@@ -21,5 +22,9 @@ Recap.belongsTo(Assignment, { foreignKey: 'assignment_id', as: 'assignment' });
 // Связь User и Streak (1:1, опциональная)
 User.hasOne(Streak, { foreignKey: 'student_id' });
 Streak.belongsTo(User, { foreignKey: 'student_id' });
+
+// Связь User и Log (1:N)
+User.hasMany(Log, { foreignKey: 'user_id' });
+Log.belongsTo(User, { foreignKey: 'user_id' });
 
 export function initAssociations() { /* файл просто импортируется в app.ts и выполняется */ }

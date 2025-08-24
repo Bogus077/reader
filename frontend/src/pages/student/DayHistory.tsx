@@ -38,6 +38,7 @@ import {
 } from "../../lib/visualStatus";
 import { Assignment } from "../../api/types";
 import styles from "./DayHistory.module.scss";
+import { postLog } from "../../api/client";
 
 // Функция для форматирования даты в формате "1 января"
 const formatDate = (dateString: string): string => {
@@ -149,6 +150,13 @@ export const DayHistory: FC = () => {
     loadAssignmentByDate(date);
     loadStrips();
   }, [date, navigate, loadAssignmentByDate, loadStrips]);
+
+  // Логируем открытие страницы истории за день
+  useEffect(() => {
+    if (date && isValid(parseISO(date))) {
+      void postLog("history_open", { date });
+    }
+  }, [date]);
 
   // Преобразуем данные для компонента DayStrips
   const stripsData = useMemo(() => {

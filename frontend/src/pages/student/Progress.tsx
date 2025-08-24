@@ -5,6 +5,7 @@ import { Topbar, Tabbar, Card, ProgressCircle, RatingStars, Skeleton } from '../
 import styles from './Progress.module.scss';
 import { $strips, $progress, loadStripsFx, loadProgressFx } from '../../store/student';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { postLog } from '../../api/client';
 
 export const StudentProgress: FC = () => {
   const [strips, progress] = useUnit([$strips, $progress]);
@@ -48,6 +49,7 @@ export const StudentProgress: FC = () => {
   useEffect(() => {
     loadStrips();
     loadProgress();
+    void postLog('progress_open');
   }, []);
 
   useEffect(() => {
