@@ -67,6 +67,9 @@ export function resolveVisualStatus(
   if (assignment.status === 'graded') {
     return 'graded';
   }
+  if(assignment.status === 'submitted') {
+    return 'submitted';
+  }
   
   const today = todayStr(tz);
   const assignmentDateStr = dayjs(assignment.date).format(DATE_FMT);
