@@ -8,6 +8,8 @@ import { RadioGroup } from "../../forms/RadioGroup/RadioGroup";
 import { Button } from "../../primitives/Button";
 import styles from "./AssignmentEditModal.module.scss";
 
+const MAX_LAST_PARAGRAPH = 255;
+
 export type AssignmentData = {
   pages: number;
   time: string;
@@ -161,6 +163,14 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
       newErrors.date = "Дата обязательна";
     }
 
+    // Ограничение длины текста параграфа
+    if (
+      formData.lastParagraph &&
+      formData.lastParagraph.length > MAX_LAST_PARAGRAPH
+    ) {
+      newErrors.lastParagraph = `Максимум ${MAX_LAST_PARAGRAPH} символов`;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -266,13 +276,22 @@ export const AssignmentEditModal: FC<AssignmentEditModalProps> = ({
           disabled={isDisabled}
         />
 
-        <Textarea
-          label="Текст параграфа"
-          value={formData.lastParagraph || ""}
-          onChange={(e) => handleChange("lastParagraph", e.target.value)}
-          placeholder="Введите текст параграфа"
-          disabled={isDisabled}
-        />
+        {(() => {
+          const lpLen = formData.lastParagraph?.length || 0;
+          const remaining = Math.max(0, MAX_LAST_PARAGRAPH - lpLen);
+          return (
+            <Textarea
+              label="Текст параграфа"
+              value={formData.lastParagraph || ""}
+              onChange={(e) => handleChange("lastParagraph", e.target.value)}
+              placeholder={`Введите текст параграфа (до ${MAX_LAST_PARAGRAPH} символов)`}
+              disabled={isDisabled}
+              maxLength={MAX_LAST_PARAGRAPH}
+              hint={!errors.lastParagraph ? `Осталось ${remaining} символов` : undefined}
+              error={errors.lastParagraph}
+            />
+          );
+        })()}
       </div>
 
       <div className={styles.actions}>
