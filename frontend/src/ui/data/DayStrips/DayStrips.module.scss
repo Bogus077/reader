@@ -16,6 +16,7 @@
   border-radius: 999px;
   transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
   cursor: default;
+  background-color: var(--gray-300);
 
   &.selectable {
     cursor: pointer;

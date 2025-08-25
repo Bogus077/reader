@@ -4,7 +4,7 @@ import { Topbar } from "../../ui/primitives/Topbar";
 import { Card, Button, Loader } from "../../ui";
 import { getMentorStudentLogs } from "../../api/client";
 import { StudentLog } from "../../api/types";
-import { format, parseISO } from "date-fns";
+import { parseISO, formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Tabbar } from "../../ui";
 
@@ -25,7 +25,7 @@ const actionLabel = (a: string) => {
 
 const formatTs = (iso: string) => {
   try {
-    return format(parseISO(iso), "d MMM yyyy, HH:mm:ss", { locale: ru });
+    return formatDistanceToNow(parseISO(iso), { addSuffix: true, locale: ru });
   } catch {
     return iso;
   }
@@ -103,7 +103,7 @@ const MentorStudentLogs: FC = () => {
                     borderTop: "1px solid #eee",
                   }}
                 >
-                  <div style={{ color: "#666" }}>{formatTs(log.createdAt)}</div>
+                  <div style={{ color: "#666", fontSize: 12 }}>{formatTs(log.createdAt)}</div>
                   <div>
                     <div style={{ marginBottom: 6 }}>{actionLabel(log.action)}</div>
                     {log.metadata ? (

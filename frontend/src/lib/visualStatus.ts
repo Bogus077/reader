@@ -12,6 +12,7 @@ import { Assignment } from '../api/types';
  */
 export function resolveVisualStatus(a: Assignment, tz: string): 'pending'|'submitted'|'missed'|'graded' {
   if (a.status === 'graded') return 'graded';
+  if (a.status === 'submitted') return 'submitted';
   const deadline = dayjs.tz(`${a.date} ${a.deadline_time}`, tz);
   if (dayjs().tz(tz).isAfter(deadline)) return 'missed';
   return a.status; // pending|submitted до дедлайна
