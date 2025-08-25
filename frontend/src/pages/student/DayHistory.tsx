@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useUnit } from "effector-react";
 import { format, parseISO, isValid } from "date-fns";
@@ -17,6 +17,7 @@ import {
   Card,
   Badge,
   Button,
+  DayStrips,
   RatingStars,
   Skeleton,
   Modal,
@@ -37,7 +38,7 @@ import {
   mapAssignmentToDayStripStatus,
   mapStatusToColor,
 } from "../../lib/visualStatus";
-import { Assignment } from "../../api/types";
+import { Assignment, Strip } from "../../api/types";
 import styles from "./DayHistory.module.scss";
 import { postLog } from "../../api/client";
 
@@ -159,17 +160,38 @@ export const DayHistory: FC = () => {
     }
   }, [date]);
 
-  // Преобразуем данные для компонента DayStrips
-  const stripsData = useMemo(() => {
-    return strips.map((strip) => {
-      // Если есть задание, определяем его визуальный статус
-      const visualStatus = strip.assignment
-        ? resolveVisualStatus(strip.assignment, "+03:00")
-        : "pending";
-      // Преобразуем визуальный статус в статус для DayStrips
-      const stripStatus = mapAssignmentToDayStripStatus(visualStatus);
+  // Часовой пояс пользователя
+  const tz = "Europe/Samara";
 
-      // Преобразуем mentor_rating в number | undefined для соответствия типу DayStripItem
+  // Преобразуем данные для компонента DayStrips
+  // Преобразуем данные для компонента DayStrips с использованием единой логики
+  const stripsData =
+    strips?.map((strip: Strip) => {
+      // Нормализуем статус к одному из: 'done' | 'current' | 'future' | 'missed'
+      const raw = (strip as any).status as string;
+      const isSupported =
+        raw === "done" ||
+        raw === "current" ||
+        raw === "future" ||
+        raw === "missed";
+      const fromBackend = isSupported
+        ? (raw as "done" | "current" | "future" | "missed")
+        : raw === "graded"
+        ? "done"
+        : raw === "submitted"
+        ? "current"
+        : raw === "pending"
+        ? "future"
+        : undefined;
+
+      const stripStatus = fromBackend
+        ? fromBackend
+        : strip.assignment
+        ? mapAssignmentToDayStripStatus(
+            resolveVisualStatus(strip.assignment, tz)
+          )
+        : "future";
+
       const rating =
         strip.assignment?.mentor_rating !== null
           ? strip.assignment?.mentor_rating
@@ -180,8 +202,7 @@ export const DayHistory: FC = () => {
         status: stripStatus,
         rating,
       };
-    });
-  }, [strips]);
+    }) || [];
 
   // Находим текущий сегмент в strips и соответствующее задание
   const currentStrip = useMemo(() => {
@@ -224,6 +245,13 @@ export const DayHistory: FC = () => {
     setConfirmOpen(false);
   };
 
+  // Обработчик выбора полоски дня
+  const handleStripSelect = (idx: number) => {
+    if (strips && strips[idx]) {
+      navigate(`/history?date=${strips[idx].date}`);
+    }
+  };
+
   // Находим индексы предыдущего и следующего дней
   const { prevDate, nextDate } = useMemo(() => {
     if (!stripsData.length) return { prevDate: null, nextDate: null };
@@ -241,13 +269,67 @@ export const DayHistory: FC = () => {
     return { prevDate, nextDate };
   }, [stripsData, date]);
 
+  // Свайпы влево/вправо для перехода Пред/След
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.changedTouches[0];
+    touchStartX.current = t.clientX;
+    touchStartY.current = t.clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current == null || touchStartY.current == null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX.current;
+    const dy = t.clientY - touchStartY.current;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    const SWIPE_THRESHOLD = 60; // px
+    const VERTICAL_LIMIT = 40; // px
+
+    if (absDx >= SWIPE_THRESHOLD && absDy <= VERTICAL_LIMIT) {
+      if (dx < 0 && nextDate) {
+        navigate(`/history?date=${nextDate}`);
+      } else if (dx > 0 && prevDate) {
+        navigate(`/history?date=${prevDate}`);
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   // Если дата не указана, редирект уже выполнен
   if (!date) return null;
 
   return (
     <div>
       <Topbar title="История чтения" leftSlot={<BackButton />} />
-      <div className={styles.container}>
+      <div
+        className={styles.container}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Полоски дней (как на Today) */}
+        <div style={{ marginBottom: 12 }}>
+          {isStripsLoading ? (
+            <div>
+              <Skeleton variant="rect" height={12} />
+              <div style={{ height: 8 }} />
+              <Skeleton variant="rect" height={12} width="80%" />
+            </div>
+          ) : (
+            <DayStrips
+              items={stripsData}
+              selectedDate={date}
+              onSelect={handleStripSelect}
+            />
+          )}
+        </div>
+
         {/* Верхняя часть с датой и статусом */}
         {isStripsLoading ? (
           <div className={styles.header}>
