@@ -10,6 +10,8 @@ import { Op } from 'sequelize';
 import StudentBook from '../studentBooks/model';
 import User from '../users/model';
 import { notifyMentors } from '../../lib/telegram';
+import { getStudentBonusBalance, getStudentBonusHistory } from '../bonuses/service';
+import Goal from '../goals/model';
 
 // Используем require для dayjs и его плагинов, так как нет типов
 const dayjs = require('dayjs');
@@ -436,6 +438,38 @@ router.get('/progress', async (req, res) => {
       ok: false,
       error: 'Internal server error'
     });
+  }
+});
+
+/**
+ * GET /student/bonus?limit=50
+ * Получить баланс и историю бонусных транзакций студента
+ */
+router.get('/bonus', async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { limit: limitRaw } = req.query as { limit?: string };
+    let limit = limitRaw ? parseInt(String(limitRaw)) : 50;
+    if (isNaN(limit) || limit <= 0 || limit > 200) limit = 50;
+
+    const [balance, history] = await Promise.all([
+      getStudentBonusBalance(studentId),
+      getStudentBonusHistory(studentId, limit),
+    ]);
+
+    const items = history.map((h: any) => ({
+      id: h.id,
+      assignment_id: h.assignment_id,
+      delta: h.delta,
+      source: h.source,
+      reason: h.reason,
+      createdAt: h.createdAt,
+    }));
+
+    return res.json({ ok: true, balance, history: items });
+  } catch (error) {
+    console.error('Error fetching student bonus:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });
 

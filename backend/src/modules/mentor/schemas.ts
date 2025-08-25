@@ -116,3 +116,37 @@ export const createBookSchema = z.object({
     source_url: z.string().url().nullable().optional(),
   })
 });
+
+// Схема для POST /mentor/bonus/reset
+export const resetBonusSchema = z.object({
+  body: z.object({
+    student_id: z.number().int().positive()
+      .describe('ID студента'),
+    reason: z.string().optional()
+      .describe('Причина сброса'),
+  })
+});
+
+// Схема для POST /mentor/bonus/apply
+export const applyBonusSchema = z.object({
+  body: z.object({
+    student_id: z.number().int().positive()
+      .describe('ID студента'),
+    delta: z.number().int().refine(v => v !== 0, { message: 'delta must not be 0' })
+      .describe('Изменение баланса (может быть отрицательным)'),
+    reason: z.string().optional()
+      .describe('Комментарий/причина'),
+    assignment_id: z.number().int().positive().optional()
+      .describe('Опциональная связка с заданием'),
+  })
+});
+
+// Схема для POST /mentor/goals — создание цели студенту
+export const createGoalSchema = z.object({
+  body: z.object({
+    student_id: z.number().int().positive().describe('ID студента'),
+    title: z.string().min(1, 'Название цели обязательно'),
+    reward_text: z.string().optional().describe('Текст награды'),
+    required_bonuses: z.number().int().min(0).describe('Необходимое количество бонусов для достижения цели'),
+  })
+});

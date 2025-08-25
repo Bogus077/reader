@@ -15,8 +15,10 @@ import dayjs from 'dayjs';
 import { updateBestStreakForStudent } from './service';
 import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentStreak } from '../student/service';
 import Streak from '../streaks/model';
-import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema } from './schemas';
+import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema, resetBonusSchema, applyBonusSchema, createGoalSchema } from './schemas';
 import { notifyMentors, notifyUser } from '../../lib/telegram';
+import { applyGradeBonus, applyManualBonus, resetStudentBonusToZero, getStudentBonusBalance } from '../bonuses/service';
+import Goal from '../goals/model';
 
 const router = express.Router();
 
@@ -40,7 +42,7 @@ router.post('/assignments/generate', requireAuth, requireMentor, validateRequest
         error: 'Missing required fields'
       });
     }
-    
+
     // Проверка корректности режима
     if (mode !== 'percent' && mode !== 'page') {
       return res.status(400).json({
@@ -170,6 +172,137 @@ router.post('/assignments', requireAuth, requireMentor, validateRequest(createAs
     return res.status(201).json({ ok: true, assignment });
   } catch (error) {
     console.error('Error creating assignment:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Сброс бонусов студента в ноль
+ * POST /mentor/bonus/reset
+ */
+router.post('/bonus/reset', requireAuth, requireMentor, validateRequest(resetBonusSchema), async (req, res) => {
+  try {
+    const { student_id, reason } = req.body as { student_id: number; reason?: string };
+
+    const student = await User.findOne({ where: { id: student_id, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    await resetStudentBonusToZero({ student_id, reason: reason || undefined });
+    const balance = await getStudentBonusBalance(student_id);
+    return res.json({ ok: true, balance });
+  } catch (error) {
+    console.error('Error resetting student bonus:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Ручное начисление/списание бонусов
+ * POST /mentor/bonus/apply
+ */
+router.post('/bonus/apply', requireAuth, requireMentor, validateRequest(applyBonusSchema), async (req, res) => {
+  try {
+    const { student_id, delta, reason, assignment_id } = req.body as { student_id: number; delta: number; reason?: string; assignment_id?: number };
+
+    const student = await User.findOne({ where: { id: student_id, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    // Если указан assignment_id — проверяем, что он принадлежит студенту
+    let assignmentIdToUse: number | null = null;
+    if (assignment_id) {
+      const a = await Assignment.findByPk(assignment_id, { include: [{ model: StudentBook, as: 'studentBook' }] });
+      if (!a || !(a as any).studentBook || (a as any).studentBook.student_id !== student_id) {
+        return res.status(400).json({ ok: false, error: 'Assignment does not belong to the student' });
+      }
+      assignmentIdToUse = a.id;
+    }
+
+    await applyManualBonus({ student_id, delta, reason: reason || undefined, assignment_id: assignmentIdToUse });
+    const balance = await getStudentBonusBalance(student_id);
+    return res.json({ ok: true, balance });
+  } catch (error) {
+    console.error('Error applying manual bonus:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Создать цель для студента
+ * POST /mentor/goals
+ */
+router.post('/goals', requireAuth, requireMentor, validateRequest(createGoalSchema), async (req, res) => {
+  try {
+    const { student_id, title, reward_text, required_bonuses } = req.body as { student_id: number; title: string; reward_text?: string; required_bonuses: number };
+
+    const student = await User.findOne({ where: { id: student_id, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    const goal = await Goal.create({
+      student_id,
+      title,
+      reward_text: reward_text || null,
+      required_bonuses: required_bonuses ?? 0,
+      status: 'pending',
+    });
+
+    return res.status(201).json({ ok: true, goal: {
+      id: goal.id,
+      student_id: goal.student_id,
+      title: goal.title,
+      reward_text: goal.reward_text,
+      status: goal.status,
+      required_bonuses: goal.required_bonuses,
+      achieved_at: goal.achieved_at,
+      createdAt: goal.createdAt,
+      updatedAt: goal.updatedAt,
+    }});
+  } catch (error) {
+    console.error('Error creating goal:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Получить цели студента
+ * GET /mentor/students/:id/goals?status=pending|achieved|cancelled
+ */
+router.get('/students/:id/goals', requireAuth, requireMentor, async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.id);
+    if (isNaN(studentId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid student ID' });
+    }
+
+    const student = await User.findOne({ where: { id: studentId, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    const { status } = req.query as { status?: string };
+    const where: any = { student_id: studentId };
+    if (status && ['pending','achieved','cancelled'].includes(status)) where.status = status;
+
+    const goals = await Goal.findAll({ where, order: [["createdAt", "DESC"]] });
+    const items = goals.map(g => ({
+      id: g.id,
+      student_id: g.student_id,
+      title: g.title,
+      reward_text: g.reward_text,
+      status: g.status,
+      required_bonuses: g.required_bonuses,
+      achieved_at: g.achieved_at,
+      createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
+    }));
+    return res.json({ ok: true, goals: items });
+  } catch (error) {
+    console.error('Error listing goals:', error);
     return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });
@@ -678,6 +811,13 @@ router.post('/assignments/:id/grade', requireAuth, requireMentor, validateReques
         error: 'Student not found'
       });
     }
+    // Применяем/обновляем бонус по оценке (идемпотентно на assignment)
+    await applyGradeBonus({
+      student_id: studentBook.student_id,
+      assignment_id: assignment.id,
+      mentor_rating,
+      reason: mentor_comment ?? null,
+    });
     
     // Обновляем лучший стрик студента на основе динамически вычисленного текущего стрика
     await updateBestStreakForStudent(studentBook.student_id, student.tz || 'Europe/Samara');
