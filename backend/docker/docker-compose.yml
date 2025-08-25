@@ -1,15 +1,17 @@
-
 services:
   postgres:
     image: postgres:15
     environment:
-      PGDATABASE : ${DB_NAME:?DB_NAME is required}
+      PGDATABASE: ${DB_NAME:?DB_NAME is required}
       PGUSER: ${DB_USER:?DB_USER is required}
-      PGPASSWORD : ${DB_PASSWORD:?DB_PASSWORD is required}
-    ports: ["5432:5432"]
+      PGPASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h 127.0.0.1 -p 5432"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME} -h 127.0.0.1 -p 5432",
+        ]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -42,13 +44,13 @@ services:
     environment:
       KEY: ${DIRECTUS_KEY}
       SECRET: ${DIRECTUS_SECRET}
-      DB_CLIENT: 'pg'
+      DB_CLIENT: "pg"
       DB_HOST: postgres
       DB_PORT: ${DB_PORT:?DB_PORT is required}
       DB_DATABASE: reading_app
       DB_USER: ${DB_USER:?DB_USER is required}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-      WEBSOCKETS_ENABLED: 'true'
+      WEBSOCKETS_ENABLED: "true"
       ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
       PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-http://localhost:8055}
