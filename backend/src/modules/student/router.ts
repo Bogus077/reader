@@ -473,4 +473,67 @@ router.get('/bonus', async (req, res) => {
   }
 });
 
+/**
+ * GET /student/goal/active
+ * Вернуть последнюю активную (pending) цель студента
+ */
+router.get('/goal/active', async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const goal = await Goal.findOne({
+      where: { student_id: studentId, status: 'pending' },
+      order: [['createdAt', 'DESC']],
+    });
+    if (!goal) {
+      return res.json({ ok: true, goal: null });
+    }
+    const item = {
+      id: goal.id,
+      student_id: goal.student_id,
+      title: goal.title,
+      reward_text: goal.reward_text,
+      status: goal.status,
+      required_bonuses: goal.required_bonuses,
+      achieved_at: goal.achieved_at,
+      createdAt: goal.createdAt,
+      updatedAt: goal.updatedAt,
+    };
+    return res.json({ ok: true, goal: item });
+  } catch (error) {
+    console.error('Error fetching active goal:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /student/goals?status=pending|achieved|cancelled
+ * Вернуть список целей студента с необязательным фильтром по статусу
+ */
+router.get('/goals', async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { status } = req.query as { status?: string };
+    const where: any = { student_id: studentId };
+    if (status && ['pending', 'achieved', 'cancelled'].includes(status)) {
+      where.status = status;
+    }
+    const goals = await Goal.findAll({ where, order: [['createdAt', 'DESC']] });
+    const items = goals.map(g => ({
+      id: g.id,
+      student_id: g.student_id,
+      title: g.title,
+      reward_text: g.reward_text,
+      status: g.status,
+      required_bonuses: g.required_bonuses,
+      achieved_at: g.achieved_at,
+      createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
+    }));
+    return res.json({ ok: true, goals: items });
+  } catch (error) {
+    console.error('Error listing student goals:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
 export default router;
