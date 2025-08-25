@@ -35,7 +35,13 @@ import {
   mapAssignmentToDayStripStatus,
 } from "../../lib/visualStatus";
 import { Strip } from "../../api/types";
-import { ClipboardList, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import {
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+  XCircle,
+} from "lucide-react";
 import { postLog } from "../../api/client";
 
 export default function StudentToday() {
@@ -82,6 +88,50 @@ export default function StudentToday() {
 
   // Часовой пояс пользователя
   const tz = user?.tz || "Europe/Samara";
+
+  // Метка даты для заголовка: "сегодня" или конкретная дата вида "25 августа"
+  const assignmentDateLabel = (() => {
+    if (!today?.date) return "сегодня";
+    try {
+      // Текущая дата в формате YYYY-MM-DD в нужном часовом поясе
+      const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const now = new Date();
+      const nowStr = formatter.format(now);
+      if (nowStr === today.date) return "сегодня";
+
+      // Завтрашняя дата в том же часовом поясе
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const tomorrowStr = formatter.format(tomorrow);
+      if (tomorrowStr === today.date) return "завтра";
+
+      // Форматируем дату как "25 августа" без смещений по тайм-зоне
+      const [y, m, d] = today.date.split("-").map(Number);
+      const months = [
+        "января",
+        "февраля",
+        "марта",
+        "апреля",
+        "мая",
+        "июня",
+        "июля",
+        "августа",
+        "сентября",
+        "октября",
+        "ноября",
+        "декабря",
+      ];
+      const day = Number.isFinite(d) ? d : 0;
+      const monthIdx = (Number.isFinite(m) ? m : 1) - 1;
+      return `${day} ${months[Math.max(0, Math.min(11, monthIdx))]}`;
+    } catch {
+      return "сегодня";
+    }
+  })();
 
   // Преобразуем данные для компонента DayStrips с использованием единой логики
   const stripsData =
@@ -271,7 +321,9 @@ export default function StudentToday() {
         <Card>
           <div className={clsx("hstack", styles.cardHeader)}>
             <ClipboardList size={18} color="var(--gray-700)" />
-            <div className={styles.cardTitle}>Задание на сегодня</div>
+            <div className={styles.cardTitle}>
+              Задание на {assignmentDateLabel}
+            </div>
           </div>
 
           {isTodayLoading ? (
@@ -295,29 +347,28 @@ export default function StudentToday() {
                 }
                 description={
                   today?.target?.last_paragraph
-                    ? `Последний абзац: "${today.target.last_paragraph}"`
+                    ? today.target.last_paragraph
                     : undefined
                 }
                 tone="info"
               />
 
-              {visualStatus === "pending" ||
-                (visualStatus === "missed" && (
-                  <div className={clsx("hstack", styles.rowMt12)}>
-                    <Clock size={16} color="var(--danger)" />
-                    <span className={styles.danger}>
-                      Сдать до {today.deadline_time}
-                    </span>
-                    <div className={styles.mlAuto}>
-                      <DeadlineTimer
-                        date={today.date}
-                        time={today.deadline_time}
-                        tz={tz}
-                        status={visualStatus}
-                      />
-                    </div>
+              {(visualStatus === "pending" || visualStatus === "missed") && (
+                <div className={clsx("hstack", styles.rowMt12)}>
+                  <Clock size={16} color="var(--danger)" />
+                  <span className={styles.danger}>
+                    Сдать до {today.deadline_time}
+                  </span>
+                  <div className={styles.mlAuto}>
+                    <DeadlineTimer
+                      date={today.date}
+                      time={today.deadline_time}
+                      tz={tz}
+                      status={visualStatus}
+                    />
                   </div>
-                ))}
+                </div>
+              )}
               {enrichedToday?.mentor_rating != null &&
                 !Number.isNaN(Number(enrichedToday.mentor_rating as any)) && (
                   <div className={clsx("hstack", styles.rowMt12)}>
@@ -376,18 +427,17 @@ export default function StudentToday() {
 
               <div className={styles.h8} />
 
-              {visualStatus === "pending" ||
-                (visualStatus === "missed" && (
-                  <Button
-                    variant="success"
-                    onClick={() => setConfirmOpen(true)}
-                    fullWidth
-                  >
-                    <span className={clsx("hstack", styles.row)}>
-                      <CheckCircle2 size={18} /> Отметить как прочитано
-                    </span>
-                  </Button>
-                ))}
+              {(visualStatus === "pending" || visualStatus === "missed") && (
+                <Button
+                  variant="success"
+                  onClick={() => setConfirmOpen(true)}
+                  fullWidth
+                >
+                  <span className={clsx("hstack", styles.row)}>
+                    <CheckCircle2 size={18} /> Отметить как прочитано
+                  </span>
+                </Button>
+              )}
             </>
           ) : (
             <div className={styles.grayText}>На сегодня заданий нет</div>
@@ -397,20 +447,32 @@ export default function StudentToday() {
         {/* Модалка подтверждения отметки */}
         <Modal isOpen={isConfirmOpen} onClose={handleModalClose}>
           <div>
-            <h3>Подтверждение</h3>
+            <h3 className={clsx("hstack", styles.row)}>
+              <CheckCircle2 size={18} color="var(--gray-700)" />
+              <span>Подтверждение</span>
+            </h3>
             <p>Отметить задание как прочитано?</p>
           </div>
           <div className={clsx("hstack", styles.rowMt12)}>
             <Button
-              variant="ghost"
+              variant="danger"
               onClick={handleModalClose}
               disabled={isSubmitting}
             >
-              Отмена
+              <span className={clsx("hstack", styles.row)}>
+                <XCircle size={18} /> Отмена
+              </span>
             </Button>
             <div className={styles.mlAuto} />
-            <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Отмечаем…" : "Да, отметить"}
+            <Button
+              variant="success"
+              onClick={handleConfirmSubmit}
+              disabled={isSubmitting}
+            >
+              <span className={clsx("hstack", styles.row)}>
+                <CheckCircle2 size={18} />{" "}
+                {isSubmitting ? "Отмечаем…" : "Да, отметить"}
+              </span>
             </Button>
           </div>
         </Modal>

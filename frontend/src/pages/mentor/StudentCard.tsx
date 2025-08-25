@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
 import { Topbar } from "../../ui/primitives/Topbar";
-import { InfoCallout, Tabbar } from "../../ui";
+import { BackButton, InfoCallout, Tabbar } from "../../ui";
 import { useParams, Link } from "react-router-dom";
 import { useUnit } from "effector-react";
 import {
@@ -441,6 +441,7 @@ export const MentorStudentCard: FC = () => {
     <div>
       <Topbar
         title={studentData ? `${studentData.name}` : "Карточка ученика"}
+        leftSlot={<BackButton />}
       />
       <div className={styles.container}>
         {studentData ? (
@@ -654,7 +655,7 @@ export const MentorStudentCard: FC = () => {
                     Добавить задание
                   </Button>
                   <Link to={`/mentor/student/${id}/logs`}>
-                    <Button variant="secondary">
+                    <Button variant="secondary" fullWidth>
                       <List size={16} style={{ marginRight: "8px" }} />
                       Журнал действий
                     </Button>

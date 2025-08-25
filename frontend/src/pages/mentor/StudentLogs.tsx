@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Topbar } from "../../ui/primitives/Topbar";
-import { Card, Button, Loader } from "../../ui";
+import { Card, Button, Loader, BackButton } from "../../ui";
 import { getMentorStudentLogs } from "../../api/client";
 import { StudentLog } from "../../api/types";
 import { parseISO, formatDistanceToNow } from "date-fns";
@@ -74,14 +74,8 @@ const MentorStudentLogs: FC = () => {
 
   return (
     <div>
-      <Topbar title="Журнал действий" />
+      <Topbar title="Журнал действий" leftSlot={<BackButton />} />
       <div style={{ padding: 16, display: "grid", gap: 16 }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="secondary" onClick={() => navigate(-1)}>
-            Назад
-          </Button>
-        </div>
-
         <Card>
           <h3 style={{ margin: 0, padding: "12px 12px 0" }}>События</h3>
           {isLoading && logs.length === 0 ? (
@@ -97,15 +91,19 @@ const MentorStudentLogs: FC = () => {
                   key={log.id}
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "200px 1fr",
+                    gridTemplateColumns: "75px 1fr",
                     gap: 12,
                     padding: "12px 16px",
                     borderTop: "1px solid #eee",
                   }}
                 >
-                  <div style={{ color: "#666", fontSize: 12 }}>{formatTs(log.createdAt)}</div>
+                  <div style={{ color: "#666", fontSize: 12 }}>
+                    {formatTs(log.createdAt)}
+                  </div>
                   <div>
-                    <div style={{ marginBottom: 6 }}>{actionLabel(log.action)}</div>
+                    <div style={{ marginBottom: 6 }}>
+                      {actionLabel(log.action)}
+                    </div>
                     {log.metadata ? (
                       <pre
                         style={{

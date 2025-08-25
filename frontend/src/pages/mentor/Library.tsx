@@ -1,10 +1,11 @@
-import { FC, useEffect } from 'react';
-import { useUnit } from 'effector-react';
-import { BookOpen, Plus } from 'lucide-react';
-import { Topbar, Tabbar, Button, BookCard } from '../../ui';
-import { $booksAvailable, loadBooksAvailableFx } from '../../store/student';
-import { Link } from 'react-router-dom';
-import styles from '../student/Library.module.scss';
+import { FC, useEffect } from "react";
+import { useUnit } from "effector-react";
+import { BookOpen, Plus } from "lucide-react";
+import { Topbar, Tabbar, Button, BookCard } from "../../ui";
+import { $booksAvailable, loadBooksAvailableFx } from "../../store/student";
+import { Link } from "react-router-dom";
+import styles from "../student/Library.module.scss";
+import { BackButton } from "../../ui/primitives/BackButton";
 
 const MentorLibrary: FC = () => {
   const books = useUnit($booksAvailable);
@@ -18,22 +19,23 @@ const MentorLibrary: FC = () => {
     <div>
       <Topbar
         title="Библиотека"
+        leftSlot={<BackButton />}
         rightSlot={
           <Link to="/mentor/books/add">
-            <Button variant="primary">
-              <Plus size={16} style={{ marginRight: 6 }} /> Добавить
+            <Button variant="primary" size="md">
+              <Plus size={16} />
             </Button>
           </Link>
         }
       />
 
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: "16px" }}>
         {books.length > 0 ? (
           <div className={styles.grid}>
             {books.map((book) => (
               <BookCard
                 key={book.id}
-                coverUrl={book.cover_url || ''}
+                coverUrl={book.cover_url || ""}
                 title={book.title}
                 author={book.author}
                 category={book.category}

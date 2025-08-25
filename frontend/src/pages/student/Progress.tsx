@@ -1,11 +1,24 @@
-import { FC, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUnit } from 'effector-react';
-import { Topbar, Tabbar, Card, ProgressCircle, RatingStars, Skeleton } from '../../ui';
-import styles from './Progress.module.scss';
-import { $strips, $progress, loadStripsFx, loadProgressFx } from '../../store/student';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
-import { postLog } from '../../api/client';
+import { FC, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUnit } from "effector-react";
+import {
+  Topbar,
+  Tabbar,
+  Card,
+  ProgressCircle,
+  RatingStars,
+  Skeleton,
+  BackButton,
+} from "../../ui";
+import styles from "./Progress.module.scss";
+import {
+  $strips,
+  $progress,
+  loadStripsFx,
+  loadProgressFx,
+} from "../../store/student";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { postLog } from "../../api/client";
 
 export const StudentProgress: FC = () => {
   const [strips, progress] = useUnit([$strips, $progress]);
@@ -24,7 +37,9 @@ export const StudentProgress: FC = () => {
     const el = metricsRef.current;
     if (!el) return;
     setShowPager(el.scrollWidth - el.clientWidth > 2);
-    const cards = el.querySelectorAll(`.${styles.metricCard}`) as NodeListOf<HTMLElement>;
+    const cards = el.querySelectorAll(
+      `.${styles.metricCard}`
+    ) as NodeListOf<HTMLElement>;
     if (!cards.length) return;
     // Обработка краёв, чтобы корректно активировалась крайняя точка
     const EPS = 24;
@@ -41,7 +56,10 @@ export const StudentProgress: FC = () => {
     let min = Infinity;
     cards.forEach((card, i) => {
       const offset = Math.abs(card.offsetLeft - el.scrollLeft);
-      if (offset < min) { min = offset; idx = i; }
+      if (offset < min) {
+        min = offset;
+        idx = i;
+      }
     });
     setActiveIndex(idx);
   };
@@ -49,7 +67,7 @@ export const StudentProgress: FC = () => {
   useEffect(() => {
     loadStrips();
     loadProgress();
-    void postLog('progress_open');
+    void postLog("progress_open");
   }, []);
 
   useEffect(() => {
@@ -71,14 +89,17 @@ export const StudentProgress: FC = () => {
         e.preventDefault();
       }
     };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    el.addEventListener('wheel', onWheel, { passive: false });
-    const onResize = () => { computeCount(); updatePagination(); };
-    window.addEventListener('resize', onResize);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
+    const onResize = () => {
+      computeCount();
+      updatePagination();
+    };
+    window.addEventListener("resize", onResize);
     return () => {
-      el.removeEventListener('scroll', onScroll as EventListener);
-      el.removeEventListener('wheel', onWheel as EventListener);
-      window.removeEventListener('resize', onResize);
+      el.removeEventListener("scroll", onScroll as EventListener);
+      el.removeEventListener("wheel", onWheel as EventListener);
+      window.removeEventListener("resize", onResize);
     };
   }, [strips, isProgressLoading, isStripsLoading]);
 
@@ -86,11 +107,12 @@ export const StudentProgress: FC = () => {
   const progressPercent = (() => {
     const done = Number(progress?.daysDone ?? 0);
     const total = Number(progress?.daysTotal ?? 0);
-    if (!Number.isFinite(done) || !Number.isFinite(total) || total <= 0) return 0;
+    if (!Number.isFinite(done) || !Number.isFinite(total) || total <= 0)
+      return 0;
     const pct = Math.round((done / total) * 100);
     return Math.max(0, Math.min(100, pct));
   })();
-  
+
   // Название активной книги теперь приходит с backend в progress.bookTitle
   const bookTitle = progress?.bookTitle ?? null;
 
@@ -106,14 +128,14 @@ export const StudentProgress: FC = () => {
     const danger = styles.statusDanger;
     const muted = styles.statusMuted;
     switch (status) {
-      case 'done':
-      case 'submitted':
-      case 'graded':
-        return <CheckCircle size={18} className={[base, success].join(' ')} />;
-      case 'missed':
-        return <XCircle size={18} className={[base, danger].join(' ')} />;
+      case "done":
+      case "submitted":
+      case "graded":
+        return <CheckCircle size={18} className={[base, success].join(" ")} />;
+      case "missed":
+        return <XCircle size={18} className={[base, danger].join(" ")} />;
       default:
-        return <Clock size={18} className={[base, muted].join(' ')} />;
+        return <Clock size={18} className={[base, muted].join(" ")} />;
     }
   };
 
@@ -121,7 +143,10 @@ export const StudentProgress: FC = () => {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      return date.toLocaleDateString("ru-RU", {
+        day: "numeric",
+        month: "short",
+      });
     } catch (e) {
       return dateString;
     }
@@ -129,8 +154,8 @@ export const StudentProgress: FC = () => {
 
   return (
     <div>
-      <Topbar title="Прогресс" />
-      <div className="container" style={{ padding: '16px' }}>
+      <Topbar title="Прогресс" leftSlot={<BackButton />} />
+      <div className="container" style={{ padding: "16px" }}>
         {/* Верхняя секция с карточкой прогресса и метриками */}
         <div className={styles.topSection}>
           {isProgressLoading ? (
@@ -148,19 +173,31 @@ export const StudentProgress: FC = () => {
 
               <div ref={metricsRef} className={styles.metricsGrid}>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon}><Skeleton variant="rect" height={20} width={20} /></div>
+                  <div className={styles.metricIcon}>
+                    <Skeleton variant="rect" height={20} width={20} />
+                  </div>
                   <Skeleton variant="text" height={20} width="30%" />
-                  <div className={styles.metricLabel}><Skeleton variant="text" height={14} width="60%" /></div>
+                  <div className={styles.metricLabel}>
+                    <Skeleton variant="text" height={14} width="60%" />
+                  </div>
                 </Card>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon}><Skeleton variant="rect" height={20} width={20} /></div>
+                  <div className={styles.metricIcon}>
+                    <Skeleton variant="rect" height={20} width={20} />
+                  </div>
                   <Skeleton variant="text" height={20} width="20%" />
-                  <div className={styles.metricLabel}><Skeleton variant="text" height={14} width="60%" /></div>
+                  <div className={styles.metricLabel}>
+                    <Skeleton variant="text" height={14} width="60%" />
+                  </div>
                 </Card>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon}><Skeleton variant="rect" height={20} width={20} /></div>
+                  <div className={styles.metricIcon}>
+                    <Skeleton variant="rect" height={20} width={20} />
+                  </div>
                   <Skeleton variant="text" height={20} width="20%" />
-                  <div className={styles.metricLabel}><Skeleton variant="text" height={14} width="60%" /></div>
+                  <div className={styles.metricLabel}>
+                    <Skeleton variant="text" height={14} width="60%" />
+                  </div>
                 </Card>
               </div>
               {showPager && (
@@ -168,13 +205,24 @@ export const StudentProgress: FC = () => {
                   {Array.from({ length: pageCount || 3 }).map((_, i) => (
                     <button
                       key={`sk-dot-${i}`}
-                      className={[styles.dot, i === activeIndex ? styles.dotActive : ''].filter(Boolean).join(' ')}
+                      className={[
+                        styles.dot,
+                        i === activeIndex ? styles.dotActive : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                       aria-label={`Перейти к карточке ${i + 1}`}
                       onClick={() => {
                         const el = metricsRef.current;
                         if (!el) return;
-                        const cards = el.querySelectorAll(`.${styles.metricCard}`) as NodeListOf<HTMLElement>;
-                        cards[i]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                        const cards = el.querySelectorAll(
+                          `.${styles.metricCard}`
+                        ) as NodeListOf<HTMLElement>;
+                        cards[i]?.scrollIntoView({
+                          behavior: "smooth",
+                          inline: "start",
+                          block: "nearest",
+                        });
                       }}
                     />
                   ))}
@@ -193,8 +241,12 @@ export const StudentProgress: FC = () => {
                   />
                 </div>
                 <div className={styles.progressInfo}>
-                  <div className={styles.bookTitle}>{bookTitle || 'Активная книга'}</div>
-                  <div className={styles.pagesText}>Прочитано {progressPercent}%</div>
+                  <div className={styles.bookTitle}>
+                    {bookTitle || "Активная книга"}
+                  </div>
+                  <div className={styles.pagesText}>
+                    Прочитано {progressPercent}%
+                  </div>
                   <div className={styles.daysText}>
                     Дней: {progress?.daysDone || 0} / {progress?.daysTotal || 0}
                   </div>
@@ -203,22 +255,32 @@ export const StudentProgress: FC = () => {
 
               <div ref={metricsRef} className={styles.metricsGrid}>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon} aria-hidden>⭐</div>
-                  <div className={styles.metricValue}>{
-                    Number.isFinite(progress?.avgRating as number)
+                  <div className={styles.metricIcon} aria-hidden>
+                    ⭐
+                  </div>
+                  <div className={styles.metricValue}>
+                    {Number.isFinite(progress?.avgRating as number)
                       ? (progress!.avgRating as number).toFixed(2)
-                      : '—'
-                  }</div>
+                      : "—"}
+                  </div>
                   <div className={styles.metricLabel}>Средняя оценка</div>
                 </Card>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon} aria-hidden>🔥</div>
-                  <div className={styles.metricValue}>{progress?.currentStreak || 0}</div>
+                  <div className={styles.metricIcon} aria-hidden>
+                    🔥
+                  </div>
+                  <div className={styles.metricValue}>
+                    {progress?.currentStreak || 0}
+                  </div>
                   <div className={styles.metricLabel}>Текущая серия</div>
                 </Card>
                 <Card className={styles.metricCard}>
-                  <div className={styles.metricIcon} aria-hidden>👑</div>
-                  <div className={styles.metricValue}>{progress?.bestStreak || 0}</div>
+                  <div className={styles.metricIcon} aria-hidden>
+                    👑
+                  </div>
+                  <div className={styles.metricValue}>
+                    {progress?.bestStreak || 0}
+                  </div>
                   <div className={styles.metricLabel}>Лучшая серия</div>
                 </Card>
               </div>
@@ -227,13 +289,24 @@ export const StudentProgress: FC = () => {
                   {Array.from({ length: pageCount || 3 }).map((_, i) => (
                     <button
                       key={`dot-${i}`}
-                      className={[styles.dot, i === activeIndex ? styles.dotActive : ''].filter(Boolean).join(' ')}
+                      className={[
+                        styles.dot,
+                        i === activeIndex ? styles.dotActive : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                       aria-label={`Перейти к карточке ${i + 1}`}
                       onClick={() => {
                         const el = metricsRef.current;
                         if (!el) return;
-                        const cards = el.querySelectorAll(`.${styles.metricCard}`) as NodeListOf<HTMLElement>;
-                        cards[i]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                        const cards = el.querySelectorAll(
+                          `.${styles.metricCard}`
+                        ) as NodeListOf<HTMLElement>;
+                        cards[i]?.scrollIntoView({
+                          behavior: "smooth",
+                          inline: "start",
+                          block: "nearest",
+                        });
                       }}
                     />
                   ))}
@@ -242,7 +315,7 @@ export const StudentProgress: FC = () => {
             </>
           )}
         </div>
-        
+
         {/* Список дней */}
         <Card>
           <div className={styles.historyHeader}>История чтения</div>
@@ -255,7 +328,7 @@ export const StudentProgress: FC = () => {
           ) : (
             <div className={styles.historyList}>
               {strips.map((strip, index) => (
-                <div 
+                <div
                   key={`${strip.date}-${index}`}
                   className={styles.dayItem}
                   onClick={() => handleDayClick(strip.date)}
@@ -269,15 +342,23 @@ export const StudentProgress: FC = () => {
                   )}
                   {strip.assignment?.target && (
                     <div className={styles.dayTarget}>
-                      {strip.assignment.target.percent ? `${strip.assignment.target.percent}%` : 
-                       strip.assignment.target.page ? `стр. ${strip.assignment.target.page}` : 
-                       strip.assignment.target.chapter || '—'}
+                      {strip.assignment.target.percent
+                        ? `${strip.assignment.target.percent}%`
+                        : strip.assignment.target.page
+                        ? `стр. ${strip.assignment.target.page}`
+                        : strip.assignment.target.chapter || "—"}
                     </div>
                   )}
                 </div>
               ))}
               {strips.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '16px', color: 'var(--gray-600)' }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "16px",
+                    color: "var(--gray-600)",
+                  }}
+                >
                   История пока пуста
                 </div>
               )}

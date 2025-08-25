@@ -21,6 +21,7 @@ import {
   Skeleton,
   Modal,
   InfoCallout,
+  BackButton,
 } from "../../ui";
 import { toast } from "../../ui/feedback/Toast";
 import clsx from "clsx";
@@ -245,7 +246,7 @@ export const DayHistory: FC = () => {
 
   return (
     <div>
-      <Topbar title="История чтения" />
+      <Topbar title="История чтения" leftSlot={<BackButton />} />
       <div className={styles.container}>
         {/* Верхняя часть с датой и статусом */}
         {isStripsLoading ? (

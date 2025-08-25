@@ -12,6 +12,7 @@ export * from './primitives/Spinner';
 export * from './primitives/Skeleton';
 export * from './primitives/Tabbar';
 export * from './primitives/Topbar';
+export * from './primitives/BackButton';
 
 // Forms
 export * from './forms';
