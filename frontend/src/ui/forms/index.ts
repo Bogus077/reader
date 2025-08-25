@@ -7,6 +7,7 @@ export * from './HelperText';
 export * from './Input';
 export * from './Textarea';
 export * from './Select';
+export * from './DateInput/DateInput';
 export * from './TimeInput';
 export * from './NumberInput';
 

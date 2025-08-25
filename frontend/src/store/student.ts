@@ -1,6 +1,6 @@
 import { createEffect, createStore } from 'effector';
-import { getStudentToday, submitAssignment, getStudentStrips, getStudentProgress, getBooksAvailable, getStudentAssignmentByDate, getStudentCurrentBook, getStudentFinishedBooks } from '../api/client';
-import { Assignment, Strip, StudentProgress } from '../api/types';
+import { getStudentToday, submitAssignment, getStudentStrips, getStudentProgress, getBooksAvailable, getStudentAssignmentByDate, getStudentCurrentBook, getStudentFinishedBooks, getStudentGoals, getStudentActiveGoal, getStudentBonus } from '../api/client';
+import { Assignment, Strip, StudentProgress, Goal } from '../api/types';
 
 export const loadTodayFx = createEffect(getStudentToday);
 export const submitFx = createEffect(async (id: number) => submitAssignment(id));
@@ -10,6 +10,9 @@ export const loadBooksAvailableFx = createEffect(getBooksAvailable);
 export const loadAssignmentByDateFx = createEffect(async (date: string) => getStudentAssignmentByDate(date));
 export const loadCurrentBookFx = createEffect(getStudentCurrentBook);
 export const loadFinishedBooksFx = createEffect(getStudentFinishedBooks);
+export const loadGoalsFx = createEffect(async (params?: { status?: 'pending' | 'achieved' | 'cancelled' }) => getStudentGoals(params));
+export const loadActiveGoalFx = createEffect(getStudentActiveGoal);
+export const loadBonusFx = createEffect(async (params?: { limit?: number }) => getStudentBonus(params));
 
 export const $today = createStore<Assignment|null>(null).on(loadTodayFx.doneData, (_, d) => d.assignment ?? null);
 export const $strips = createStore<Strip[]>([]).on(loadStripsFx.doneData, (_, d) => d.strips ?? []);
@@ -65,3 +68,12 @@ export const $currentBook = createStore<CurrentBookState>({ book: null, progress
 
 export const $finishedBookIds = createStore<number[]>([])
   .on(loadFinishedBooksFx.doneData, (_, d) => d.bookIds ?? []);
+
+export const $goals = createStore<Goal[]>([])
+  .on(loadGoalsFx.doneData, (_, d) => d.goals ?? []);
+
+export const $activeGoal = createStore<Goal | null>(null)
+  .on(loadActiveGoalFx.doneData, (_, d) => d.goal ?? null);
+
+export const $bonusBalance = createStore<number>(0)
+  .on(loadBonusFx.doneData, (_, d) => Number.isFinite(d.balance as any) ? Math.max(0, Math.trunc(d.balance as any)) : 0);

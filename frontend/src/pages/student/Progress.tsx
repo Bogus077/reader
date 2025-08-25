@@ -9,6 +9,7 @@ import {
   RatingStars,
   Skeleton,
   BackButton,
+  SegmentsCircle,
 } from "../../ui";
 import styles from "./Progress.module.scss";
 import {
@@ -16,16 +17,27 @@ import {
   $progress,
   loadStripsFx,
   loadProgressFx,
+  $activeGoal,
+  loadActiveGoalFx,
+  $bonusBalance,
+  loadBonusFx,
 } from "../../store/student";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { postLog } from "../../api/client";
 
 export const StudentProgress: FC = () => {
-  const [strips, progress] = useUnit([$strips, $progress]);
+  const [strips, progress, activeGoal] = useUnit([
+    $strips,
+    $progress,
+    $activeGoal,
+  ]);
+  const bonusBalance = useUnit($bonusBalance);
   const loadStrips = useUnit(loadStripsFx);
   const loadProgress = useUnit(loadProgressFx);
+  const loadActiveGoal = useUnit(loadActiveGoalFx);
   const isStripsLoading = useUnit(loadStripsFx.pending);
   const isProgressLoading = useUnit(loadProgressFx.pending);
+  const isActiveGoalLoading = useUnit(loadActiveGoalFx.pending);
   const navigate = useNavigate();
 
   // Горизонтальная прокрутка метрик + пагинация точками
@@ -67,6 +79,8 @@ export const StudentProgress: FC = () => {
   useEffect(() => {
     loadStrips();
     loadProgress();
+    loadActiveGoal();
+    loadBonusFx();
     void postLog("progress_open");
   }, []);
 
@@ -315,6 +329,118 @@ export const StudentProgress: FC = () => {
             </>
           )}
         </div>
+
+        {/* Активная цель */}
+        <Card className={styles.goalCard}>
+          {isActiveGoalLoading ? (
+            <div className={styles.skeletonGrid}>
+              <Skeleton variant="rect" height={16} />
+              <Skeleton variant="rect" height={16} width="80%" />
+            </div>
+          ) : activeGoal ? (
+            <div className={styles.goalSection}>
+              {typeof activeGoal.required_bonuses === "number" &&
+                activeGoal.required_bonuses > 0 && (
+                  <div className={styles.goalIndicatorRow}>
+                    <SegmentsCircle
+                      total={Math.max(0, activeGoal.required_bonuses || 0)}
+                      value={Math.min(
+                        Math.max(0, Number(bonusBalance) || 0),
+                        Math.max(0, activeGoal.required_bonuses || 0)
+                      )}
+                      shape="arc"
+                      size={72}
+                      gapAngle={20}
+                    />
+                    <div className={styles.goalInfo}>
+                      {activeGoal.reward_text && (
+                        <div className={styles.rewardText}>
+                          Награда: {activeGoal.reward_text}
+                        </div>
+                      )}
+                      <div className={styles.pagesText}>
+                        Получено:{" "}
+                        {Math.min(
+                          Math.max(0, Number(bonusBalance) || 0),
+                          Math.max(0, activeGoal.required_bonuses || 0)
+                        )}{" "}
+                        из {Math.max(0, activeGoal.required_bonuses || 0)}
+                      </div>
+                      <div className={styles.rulesRow}>
+                        <div
+                          className={[styles.ruleChip, styles.ruleChipPos].join(
+                            " "
+                          )}
+                        >
+                          <span
+                            className={styles.ruleStars}
+                            aria-label="оценка 5 звёзд"
+                          >
+                            ⭐⭐⭐⭐⭐
+                          </span>
+                          <span className={styles.ruleDelta}>+2</span>
+                        </div>
+                        <div
+                          className={[styles.ruleChip, styles.ruleChipPos].join(
+                            " "
+                          )}
+                        >
+                          <span
+                            className={styles.ruleStars}
+                            aria-label="оценка 4 звезды"
+                          >
+                            ⭐⭐⭐⭐
+                          </span>
+                          <span className={styles.ruleDelta}>+1</span>
+                        </div>
+                        <div
+                          className={[styles.ruleChip, styles.ruleChipNeg].join(
+                            " "
+                          )}
+                        >
+                          <span
+                            className={styles.ruleStars}
+                            aria-label="оценка 3 звезды"
+                          >
+                            ⭐⭐⭐
+                          </span>
+                          <span className={styles.ruleDelta}>-1</span>
+                        </div>
+                        <div
+                          className={[styles.ruleChip, styles.ruleChipNeg].join(
+                            " "
+                          )}
+                        >
+                          <span
+                            className={styles.ruleStars}
+                            aria-label="оценка 2 звезды"
+                          >
+                            ⭐⭐
+                          </span>
+                          <span className={styles.ruleDelta}>-2</span>
+                        </div>
+                        <div
+                          className={[styles.ruleChip, styles.ruleChipNeg].join(
+                            " "
+                          )}
+                        >
+                          <span
+                            className={styles.ruleStars}
+                            aria-label="оценка 1 звезда"
+                          >
+                            ⭐
+                          </span>
+                          <span className={styles.ruleDelta}>-3</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <div className={styles.daysText}>Нет активной цели</div>
+          )}
+        </Card>
 
         {/* Список дней */}
         <Card>

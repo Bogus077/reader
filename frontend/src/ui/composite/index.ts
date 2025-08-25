@@ -5,3 +5,4 @@ export * from './GradeModal/GradeModal';
 export * from './AssignmentEditModal/AssignmentEditModal';
 export * from './InfoCallout/InfoCallout';
 export * from './StreakCard/StreakCard';
+export * from './CreateGoalModal/CreateGoalModal';

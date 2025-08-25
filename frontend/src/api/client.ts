@@ -1,5 +1,5 @@
 import ky from 'ky';
-import { Assignment, Strip, StudentProgress, StudentLog } from './types';
+import { Assignment, Strip, StudentProgress, StudentLog, Goal, GoalStatus, StudentBonusResponse } from './types';
 
 export const api = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL,
@@ -73,6 +73,17 @@ export const getStudentCurrentBook = () =>
 
 export const getStudentFinishedBooks = () =>
   api.get('student/finished-books').json<{ ok: boolean; bookIds: number[] }>();
+
+// STUDENT GOALS
+export const getStudentGoals = (params?: { status?: GoalStatus }) =>
+  api.get('student/goals', { searchParams: params as any }).json<{ ok: boolean; goals: Goal[] }>();
+
+export const getStudentActiveGoal = () =>
+  api.get('student/goal/active').json<{ ok: boolean; goal: Goal | null }>();
+
+// STUDENT BONUS
+export const getStudentBonus = (params?: { limit?: number }) =>
+  api.get('student/bonus', { searchParams: params as any }).json<StudentBonusResponse>();
 
 // MENTOR
 export const getMentorStudentCard = (id: number) =>
@@ -156,6 +167,37 @@ export const getMentorStudentLogs = (
 ) => api
   .get(`mentor/students/${studentId}/logs`, { searchParams: params as any })
   .json<{ ok: boolean; logs: StudentLog[] }>();
+
+// Mentor: goals
+export const getMentorStudentGoals = (
+  studentId: number,
+  params?: { status?: GoalStatus }
+) => api
+  .get(`mentor/students/${studentId}/goals`, { searchParams: params as any })
+  .json<{ ok: boolean; goals: Goal[] }>();
+
+// Mentor: student bonus (balance + history)
+export const getMentorStudentBonus = (
+  studentId: number,
+  params?: { limit?: number }
+) => api
+  .get(`mentor/students/${studentId}/bonus`, { searchParams: params as any })
+  .json<StudentBonusResponse>();
+
+// Mentor: active goal (first pending)
+export const getMentorStudentActiveGoal = async (studentId: number) => {
+  const res = await api
+    .get(`mentor/students/${studentId}/goals`, { searchParams: { status: 'pending' } as any })
+    .json<{ ok: boolean; goals: Goal[] }>();
+  return { ok: res.ok, goal: (res.goals && res.goals.length > 0) ? res.goals[0] : null } as { ok: boolean; goal: Goal | null };
+};
+
+export const createMentorGoal = (body: {
+  student_id: number;
+  title: string;
+  reward_text?: string | null;
+  required_bonuses?: number;
+}) => api.post('mentor/goals', { json: body }).json<{ ok: boolean; goal: Goal }>();
 
 // LOGS
 export const postLog = (

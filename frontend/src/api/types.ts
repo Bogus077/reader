@@ -46,3 +46,33 @@ export interface StudentLog {
   metadata: any;
   createdAt: string; // ISO
 }
+
+export type GoalStatus = 'pending' | 'achieved' | 'cancelled';
+
+export interface Goal {
+  id: number;
+  student_id: number;
+  title: string;
+  reward_text: string | null;
+  status: GoalStatus;
+  required_bonuses: number;
+  achieved_at: string | null; // ISO or null
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Bonuses
+export type StudentBonusHistoryItem = {
+  id: number;
+  assignment_id?: number | null;
+  delta: number;
+  source: string;
+  reason?: string | null;
+  createdAt: string; // ISO
+};
+
+export interface StudentBonusResponse {
+  ok: boolean;
+  balance: number;
+  history: StudentBonusHistoryItem[];
+}

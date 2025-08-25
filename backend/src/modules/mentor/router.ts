@@ -17,7 +17,7 @@ import { getActiveStudentBook, getTodayAssignment, buildStrips, computeCurrentSt
 import Streak from '../streaks/model';
 import { generateAssignmentsSchema, updateAssignmentSchema, gradeAssignmentSchema, assignBookSchema, updateBookStatusSchema, createBookSchema, createAssignmentSchema, resetBonusSchema, applyBonusSchema, createGoalSchema } from './schemas';
 import { notifyMentors, notifyUser } from '../../lib/telegram';
-import { applyGradeBonus, applyManualBonus, resetStudentBonusToZero, getStudentBonusBalance } from '../bonuses/service';
+import { applyGradeBonus, applyManualBonus, resetStudentBonusToZero, getStudentBonusBalance, getStudentBonusHistory } from '../bonuses/service';
 import Goal from '../goals/model';
 
 const router = express.Router();
@@ -303,6 +303,46 @@ router.get('/students/:id/goals', requireAuth, requireMentor, async (req, res) =
     return res.json({ ok: true, goals: items });
   } catch (error) {
     console.error('Error listing goals:', error);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+});
+
+/**
+ * Бонусы студента (баланс и история)
+ * GET /mentor/students/:id/bonus?limit=50
+ */
+router.get('/students/:id/bonus', requireAuth, requireMentor, async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.id);
+    if (isNaN(studentId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid student ID' });
+    }
+
+    const student = await User.findOne({ where: { id: studentId, role: 'student' } });
+    if (!student) {
+      return res.status(404).json({ ok: false, error: 'Student not found' });
+    }
+
+    const { limit } = req.query as { limit?: string };
+    const lim = limit ? Math.max(1, Math.min(200, parseInt(limit) || 50)) : 50;
+
+    const [balance, historyRows] = await Promise.all([
+      getStudentBonusBalance(studentId),
+      getStudentBonusHistory(studentId, lim),
+    ]);
+
+    const history = historyRows.map((r: any) => ({
+      id: r.id,
+      assignment_id: r.assignment_id,
+      delta: r.delta,
+      source: r.source,
+      reason: r.reason,
+      createdAt: r.createdAt,
+    }));
+
+    return res.json({ ok: true, balance, history });
+  } catch (error) {
+    console.error('Error fetching student bonus for mentor:', error);
     return res.status(500).json({ ok: false, error: 'Internal server error' });
   }
 });

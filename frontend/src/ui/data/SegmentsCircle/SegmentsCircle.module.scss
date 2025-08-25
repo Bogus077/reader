@@ -1,0 +1,83 @@
+.root {
+  position: relative;
+  display: block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.dot {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--gray-300);
+  color: inherit;
+}
+
+.dotFilled {
+  background: var(--primary);
+}
+
+.seg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 14px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  border-radius: 3px;
+  background: var(--gray-300);
+  color: inherit;
+}
+
+.segFilled {
+  background: var(--primary);
+}
+
+.arc {
+  display: block;
+  overflow: visible;
+  box-sizing: border-box;
+  stroke: var(--gray-300);
+  color: inherit;
+}
+
+.arcFilled {
+  stroke: var(--primary);
+}
+
+.empty {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--gray-300);
+  color: inherit;
+  transform: translate(-50%, -50%);
+}

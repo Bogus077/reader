@@ -10,7 +10,12 @@ import {
   $studentStrips,
   $studentRecentRatings,
   $studentStats,
+  $studentBonusBalance,
+  $studentBonusHistory,
+  $studentActiveGoal,
   loadMentorStudentCardFx,
+  loadMentorStudentBonusFx,
+  loadMentorStudentActiveGoalFx,
 } from "../../store/mentor";
 import {
   Card,
@@ -20,6 +25,8 @@ import {
   RatingStars,
   Toast,
   Loader,
+  CreateGoalModal,
+  SegmentsCircle,
 } from "../../ui";
 import { GradeModal } from "../../ui/composite/GradeModal/GradeModal";
 import {
@@ -34,8 +41,17 @@ import {
   GeneratePlanModal,
   GeneratePlanData,
 } from "../../ui/composite/GeneratePlanModal";
-import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
+import { Assignment, Strip } from "../../api/types";
+import {
+  gradeAssignment,
+  patchAssignment,
+  assignStudentBook,
+  generateAssignments,
+  getBooksAvailable,
+  createAssignment,
+  getMentorStudentAssignments,
+  createMentorGoal,
+} from "../../api/client";
 import {
   CheckCircle,
   XCircle,
@@ -48,16 +64,8 @@ import {
   List,
 } from "lucide-react";
 import styles from "./StudentCard.module.scss";
-import {
-  gradeAssignment,
-  patchAssignment,
-  assignStudentBook,
-  generateAssignments,
-  getBooksAvailable,
-  createAssignment,
-  getMentorStudentAssignments,
-} from "../../api/client";
-import { Assignment, Strip } from "../../api/types";
+import { format, parseISO } from "date-fns";
+import { ru } from "date-fns/locale";
 
 export const MentorStudentCard: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -76,8 +84,17 @@ export const MentorStudentCard: FC = () => {
     $studentRecentRatings,
     $studentStats,
   ]);
+  const [bonusBalance, bonusHistory, activeGoal] = useUnit([
+    $studentBonusBalance,
+    $studentBonusHistory,
+    $studentActiveGoal,
+  ]);
   const load = useUnit(loadMentorStudentCardFx);
+  const loadBonus = useUnit(loadMentorStudentBonusFx);
+  const loadActiveGoal = useUnit(loadMentorStudentActiveGoalFx);
   const isPageLoading = useUnit(loadMentorStudentCardFx.pending);
+  const isBonusLoading = useUnit(loadMentorStudentBonusFx.pending);
+  const isActiveGoalLoading = useUnit(loadMentorStudentActiveGoalFx.pending);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   // Состояния для модальных окон
@@ -86,6 +103,7 @@ export const MentorStudentCard: FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAssignBookModalOpen, setIsAssignBookModalOpen] = useState(false);
   const [isGeneratePlanModalOpen, setIsGeneratePlanModalOpen] = useState(false);
+  const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -102,6 +120,14 @@ export const MentorStudentCard: FC = () => {
     }
   }, [id, load]);
 
+  // Загрузка бонусов и активной цели при монтировании/смене id
+  useEffect(() => {
+    if (id) {
+      loadBonus({ studentId: Number(id), limit: 10 });
+      loadActiveGoal(Number(id));
+    }
+  }, [id, loadBonus, loadActiveGoal]);
+
   // Закрытие тоста через 3 секунды
   useEffect(() => {
     if (toastMessage) {
@@ -111,22 +137,6 @@ export const MentorStudentCard: FC = () => {
       return () => clearTimeout(timer);
     }
   }, [toastMessage]);
-
-  // Загрузка доступных книг при открытии модального окна назначения книги
-  const loadAvailableBooks = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getBooksAvailable();
-      if (response.ok && response.books) {
-        setAvailableBooks(response.books);
-      }
-    } catch (error) {
-      console.error("Error loading available books:", error);
-      setToastMessage("Ошибка при загрузке списка книг");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Обработчик создания задания
   const handleCreateSubmit = async (data: AssignmentData) => {
@@ -302,6 +312,67 @@ export const MentorStudentCard: FC = () => {
     }
   };
 
+  // Открытие модалки создания цели
+  const handleOpenCreateGoalModal = () => {
+    setIsCreateGoalModalOpen(true);
+  };
+
+  // Загрузка доступных книг для назначения
+  const loadAvailableBooks = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getBooksAvailable();
+      if (res.ok && Array.isArray(res.books)) {
+        setAvailableBooks(
+          res.books.map(({ id, title, author }) => ({ id, title, author }))
+        );
+      } else {
+        setToastMessage("Не удалось загрузить список книг");
+      }
+    } catch (e) {
+      console.error("Error loading available books:", e);
+      setToastMessage("Ошибка при загрузке списка книг");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Создание цели
+  const handleCreateGoal = async (data: {
+    title: string;
+    reward_text?: string | null;
+    required_bonuses?: number;
+  }) => {
+    if (!id) return;
+    try {
+      setIsLoading(true);
+      const resp = await createMentorGoal({
+        student_id: Number(id),
+        title: data.title,
+        reward_text: data.reward_text ?? null,
+        required_bonuses:
+          typeof data.required_bonuses === "number"
+            ? data.required_bonuses
+            : undefined,
+      });
+      if (resp.ok) {
+        setToastMessage("Цель создана");
+        setIsCreateGoalModalOpen(false);
+        await load(Number(id));
+        // Обновляем активную цель и бонусы
+        await loadActiveGoal(Number(id));
+        await loadBonus({ studentId: Number(id), limit: 10 });
+      } else {
+        setToastMessage("Не удалось создать цель");
+      }
+    } catch (e) {
+      console.error("Error creating goal", e);
+      setToastMessage("Ошибка при создании цели");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Обработчик назначения книги
   const handleAssignBook = async (data: AssignBookData) => {
     if (id) {
@@ -311,8 +382,6 @@ export const MentorStudentCard: FC = () => {
           student_id: Number(id),
           book_id: data.bookId,
           progress_mode: data.mode, // исправлено с mode на progress_mode
-          daily_target: data.dailyTarget,
-          deadline_time: data.deadlineTime,
           start_date: data.startDate,
         };
 
@@ -385,6 +454,10 @@ export const MentorStudentCard: FC = () => {
 
           // Обновляем данные карточки без перезагрузки страницы
           await load(Number(id));
+
+          // Обновляем бонусы и активную цель, т.к. начисление бонусов может изменять прогресс по цели
+          await loadBonus({ studentId: Number(id), limit: 10 });
+          await loadActiveGoal(Number(id));
 
           // Обновляем выбранное задание, если оно ещё выбрано
           if (selectedDay) {
@@ -647,6 +720,13 @@ export const MentorStudentCard: FC = () => {
                   </Button>
                   <Button
                     variant="secondary"
+                    onClick={handleOpenCreateGoalModal}
+                    disabled={isLoading}
+                  >
+                    Создать цель
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={handleOpenCreateModal}
                     disabled={!activeBook || isLoading}
                     title={!activeBook ? "Сначала назначьте книгу" : ""}
@@ -661,6 +741,87 @@ export const MentorStudentCard: FC = () => {
                     </Button>
                   </Link>
                 </div>
+              </div>
+
+              {/* Активная цель */}
+              <div className={styles.card}>
+                <h3 className={styles.sectionTitle}>Активная цель</h3>
+                {isActiveGoalLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : activeGoal ? (
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <SegmentsCircle
+                      total={Math.max(0, activeGoal.required_bonuses || 0)}
+                      value={Math.min(
+                        bonusBalance,
+                        Math.max(0, activeGoal.required_bonuses || 0)
+                      )}
+                      size={64}
+                      shape="arc"
+                      gapAngle={25}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600 }}>{activeGoal.title}</div>
+                      {activeGoal.reward_text && (
+                        <div style={{ opacity: 0.8, marginTop: 4 }}>
+                          Награда: {activeGoal.reward_text}
+                        </div>
+                      )}
+                      <div style={{ marginTop: 4 }}>
+                        Прогресс:{" "}
+                        {Math.min(bonusBalance, activeGoal.required_bonuses)} /{" "}
+                        {activeGoal.required_bonuses}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>Нет активной цели</div>
+                )}
+              </div>
+
+              {/* Бонусы */}
+              <div className={styles.card}>
+                <h3 className={styles.sectionTitle}>Бонусы</h3>
+                {isBonusLoading ? (
+                  <Loader size="sm" message="Загрузка…" />
+                ) : (
+                  <>
+                    <div className={styles.infoRow}>
+                      <div className={styles.label}>Баланс:</div>
+                      <div className={styles.value}>
+                        <Badge tone="info">{bonusBalance}</Badge>
+                      </div>
+                    </div>
+                    {bonusHistory && bonusHistory.length > 0 ? (
+                      bonusHistory.map((h, idx) => (
+                        <div key={h.id ?? idx} className={styles.ratingItem}>
+                          <div className={styles.ratingDate}>
+                            {formatDate(h.createdAt)}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <Badge tone={h.delta >= 0 ? "success" : "danger"}>
+                              {h.delta >= 0 ? `+${h.delta}` : h.delta}
+                            </Badge>
+                            <div style={{ opacity: 0.8 }}>
+                              {h.source}
+                              {h.reason ? ` — ${h.reason}` : ""}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div>История пуста</div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Статистика */}
@@ -827,6 +988,14 @@ export const MentorStudentCard: FC = () => {
           isLoading={isLoading}
         />
       )}
+
+      {/* Модальное окно создания цели */}
+      <CreateGoalModal
+        isOpen={isCreateGoalModalOpen}
+        onClose={() => setIsCreateGoalModalOpen(false)}
+        onSubmit={handleCreateGoal}
+        isLoading={isLoading}
+      />
 
       {/* Тост для уведомлений */}
       {toastMessage && (

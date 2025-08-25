@@ -275,6 +275,179 @@
   transform: scale(1.4);
 }
 
+.goalCard {
+  margin-bottom: 24px;
+}
+
+.goalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goalIndicatorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.goalInfo {
+  display: flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  flex-direction: column;
+  gap: 6px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.rewardText {
+  display: block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.rulesList {
+  display: grid;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 4px 0 0 0;
+  gap: 2px;
+  background: transparent;
+  color: var(--gray-700);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  list-style: none;
+}
+
+.rulesRow {
+  display: flex;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 4px 0 0 0;
+  gap: 6px;
+  flex-wrap: wrap;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.ruleChip {
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 4px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  margin: 0;
+  gap: 6px;
+  background: transparent;
+  color: var(--gray-900);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ruleChipPos {
+  border-color: var(--success, #22c55e);
+}
+
+.ruleChipNeg {
+  border-color: var(--danger, #ef4444);
+}
+
+.ruleGrade {
+  display: inline-block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--gray-800);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.ruleDelta {
+  display: inline-block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--gray-800);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ruleStars {
+  display: inline-block;
+  overflow: visible;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--warning, #f59e0b);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+.ruleChipPos .ruleDelta {
+  color: var(--success, #22c55e);
+}
+
+.ruleChipNeg .ruleDelta {
+  color: var(--danger, #ef4444);
+}
+
 @media (max-width: 600px) {
   .metricsGrid {
     position: relative;
